@@ -17,7 +17,7 @@ class FootAPIParser:
     def get_category_id(self, country):
         #category = country (i.e. US)
         request_url = "https://footapi7.p.rapidapi.com/api/tournament/categories"
-        response = requests.get(request_url, headers=HEADERS).json()
+        response = requests.get(request_url, headers=self._headers).json()
         for row in response["categories"]:
             if row["slug"] == country:
                 return row["id"]
@@ -27,7 +27,7 @@ class FootAPIParser:
         #tournament = league (i.e. MLS)
         request_url = f"https://footapi7.p.rapidapi.com/api/tournament/all/\
             category/{category_id}"
-        response = requests.get(request_url, headers=HEADERS).json()
+        response = requests.get(request_url, headers=self._headers).json()
         for row in response["groups"][0]["uniqueTournaments"]:
             if row["slug"] == league:
                 return row["id"]
@@ -37,7 +37,7 @@ class FootAPIParser:
         #season = season (i.e. MLS 2023 season)
         request_url = f"https://footapi7.p.rapidapi.com/api/tournament/\
             {tournament_id}/seasons"
-        response = requests.get(request_url, headers=HEADERS).json()
+        response = requests.get(request_url, headers=self._headers).json()
         for row in response["seasons"]:
             if row["year"] == year:
                 return row["id"]
