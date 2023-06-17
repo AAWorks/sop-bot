@@ -1,1 +1,3 @@
-from utils.api_parser import 
+from utils.api_parser import FootAPIParser
+
+PARSER = FootAPIParser()
