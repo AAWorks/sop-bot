@@ -17,5 +17,5 @@ if userinput:
         away = st.text_input('Team 2')
         predict = st.form_submit_button("Get Prediction")
 
-if predict:
-    st.write("working")
+    if predict:
+        st.write("working")
