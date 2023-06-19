@@ -2,17 +2,24 @@
 import requests
 
 
-class FootAPIParser:
-    __headers: dict
+class FootAPISearch:
+    _headers: dict
 
     def __init__(self):
         self._headers = {
             "X-RapidAPI-Key": "a13dc7ec8fmshb43687c2d45f909p1f0132jsn9f6991f27087",
             "X-RapidAPI-Host": "footapi7.p.rapidapi.com"
         }
+    
+    @property
+    def headers(self):
+        return self._headers
 
     def _clean_input(self, inputstr):
         return inputstr.lower().strip().replace(" ", "-")
+
+    #def get_all_league_ids(self, inputstr):
+    #    pass
 
     def get_category_id(self, country):
         #category = country (i.e. US)
@@ -55,6 +62,6 @@ class FootAPIParser:
 
 def test():
     details = ("usa", "mls", "2023")
-    parser = FootAPIParser()
+    parser = FootAPISearch()
     ids = parser.general_request(details)
     print(f"Country: {ids[0]}, League: {ids[1]}, Season: {ids[2]}")

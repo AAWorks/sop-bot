@@ -1,7 +1,21 @@
-from api_parser import FootAPIParser
-import requests
+from api_search import FootAPISearch
+import sqlite3, requests
 
-class Scraper(FootAPIParser):
+
+class Parser:
+    pass
+
+class Scraper:
+    def __init__(self):
+        self._footapi = FootAPISearch()
+
+    def get_league_matches(self, league_id):
+        pass
+
+    def get_match_data(self, match_id):
+        pass
+
+class Stats(FootAPIParser):
     def get_country_list(self):
         country_list = []
         request_url = "https://footapi7.p.rapidapi.com/api/tournament/categories"
