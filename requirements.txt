@@ -1,2 +1,4 @@
 requests==2.31.0
 streamlit==1.23.1
+scikit-learn==1.2.2
+xgboost==1.7.6
