@@ -8,6 +8,9 @@ class Parser:
 class Scraper:
     def __init__(self):
         self._footapi = FootAPISearch()
+    
+    def get_premier_league_ids(self): #gets the league ids for all the divisions
+        pass
 
     def get_league_matches(self, league_id):
         pass

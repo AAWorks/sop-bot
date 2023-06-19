@@ -1,4 +1,4 @@
-from utils.api_parser import FootAPIParser
+from utils.api_search import FootAPISearch
 import streamlit as st
 import pandas as pd
 import os
