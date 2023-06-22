@@ -3,7 +3,34 @@ import sqlite3, requests
 
 
 class Parser:
-    pass
+    def __init__(self):
+        self._db = sqlite3.connect('data/soccer_data.db')
+        self._create_table()
+
+    def _create_table(self):
+        cursor = self._db.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS mls(
+                match_id INTEGER,
+                epoch_date INTEGER,
+                home_team TEXT,
+                home_score INTEGER,
+                away_team TEXT,
+                away_score INTEGER,
+                stadium_name TEXT,
+                ref_toughness INTEGER
+                
+            )
+        ''')
+        self._db.commit()
+
+    def _close_db(self):
+        self._db.close()
+
+    def _add_row(self, values):
+        cursor = self._db.cursor()
+        cursor.execute("INSERT INTO mls(match_id, epoch_date, home_team, home_score, away_team, away_score, stadium_name, ref_toughness ...) VALUES(?, ?, ?, ...)", *values)
+        self._db.commit()
 
 class Scraper:
     def __init__(self):
@@ -21,21 +48,21 @@ class Scraper:
         pass
 
     def get_match_data(self, match_id): #get all the relevant stats from a match and put them into a list
-        home_team = []
-        away_team = []
         match_data = []
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}"
-        response = requests.get(url, headers=self._footapi._headers).json()
-        away_team.append(response["event"]["awayTeam"]["name"])
-        away_team.append(response["event"]["awayScore"]["current"])
-        home_team.append(response["event"]["homeTeam"]["name"])
-        home_team.append(response["event"]["homeScore"]["current"])
-        match_data.append(response["event"]["tournament"]["uniqueTournament"]["name"])
-        match_data.append(response["event"]["venue"]["stadium"]["name"])
-        match_data.append(response["event"]["season"]["year"])
-        return home_team, away_team, match_data
+        response = requests.get(url, headers=self._footapi._headers).json()["event"]
+        match_data.append(match_id)
+        match_data.append(response["startTimestamp"])
+        match_data.append(response["homeTeam"]["name"])
+        match_data.append(response["homeScore"]["current"])
+        match_data.append(response["awayTeam"]["name"])
+        match_data.append(response["awayScore"]["current"])
+        match_data.append(((int(response["referee"]["redCards"]) * 2) + int(response["referee"]["yellowCards"]) + int(response["referee"]["yellowRedCards"])) / (int(response["referee"]["games"])))
+        url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/statistics"
+        response = requests.get(url, headers=self._footapi._headers).json()["statistics"][0]["groups"]
+        return match_data
 
 
 par = Scraper()
-home_stats, away_stats, match_stats = par.get_match_data(10952277)
-print(f"{home_stats[0]}: {home_stats[1]}, {away_stats[0]}: {away_stats[1]} | Tournament: {match_stats[0]} | Venue: {match_stats[1]} | Year: {match_stats[2]}")
+home_stats, away_stats, match_stats = par.get_match_data(10408291)
+print(f"{home_stats[0]}: {home_stats[1]}, {away_stats[0]}: {away_stats[1]} | Tournament: {match_stats[0]} | Stadium: {match_stats[1]} | Year: {match_stats[2]}")
