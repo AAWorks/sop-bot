@@ -91,7 +91,7 @@ class Parser:
 
     def _add_row(self, values):
         cursor = self._db.cursor()
-        cursor.execute("INSERT INTO mls(match_id, epoch_date, home_team, home_score, away_team, away_score, stadium_name, ref_toughness, home_possession, away_possession, home_totshots, away_totshots, home_shotsontarget, away_shotsontarget, home_shotsofftarget, away_shotsofftarget, home_blockedshots, away_blockedshots, home_cornerkicks, away_cornerkicks, home_offsides, away_offsides, home_fouls, away_fouls, home_yellowcards, away_yellowcards, home_redcards, away_redcards, home_bigchances, away_bigchances, home_bigchancesmissed, away_bigchancesmissed, home_hitwoodwork, away_hitwoodwork, home_counterattacks, away_counterattacks, home_counterattackshotsmissed, away_counterattackshotsmissed, home_shotsinsidebox, away_shotsinsidebox, home_shotsoutsidebox, away_shotsoutsidebox, home_goalkeepersaves, away_goalkeepersaves, home_goalsprevented, away_goalsprevented, home_passes, away_passes, home_accuratepasses, away_accuratepasses, home_longballs, away_longballs, home_crosses, away_crosses, home_dribbles, away_dribbles, home_possessionlost, away_possessionlost, home_duelswon, away_duelswon, home_aerialswon, away_aerialswon, home_tackles, away_tackles, home_interceptions, away_interceptions, home_clearances, away_clearances, home_formation, away_formation ...) VALUES(?, ?, ?, ...)", *values)
+        cursor.execute("INSERT INTO mls(match_id, epoch_date, home_team, home_score, away_team, away_score, stadium_name, ref_toughness, home_possession, away_possession, home_totshots, away_totshots, home_shotsontarget, away_shotsontarget, home_shotsofftarget, away_shotsofftarget, home_blockedshots, away_blockedshots, home_cornerkicks, away_cornerkicks, home_offsides, away_offsides, home_fouls, away_fouls, home_yellowcards, away_yellowcards, home_redcards, away_redcards, home_bigchances, away_bigchances, home_bigchancesmissed, away_bigchancesmissed, home_hitwoodwork, away_hitwoodwork, home_counterattacks, away_counterattacks, home_counterattackshotsmissed, away_counterattackshotsmissed, home_shotsinsidebox, away_shotsinsidebox, home_shotsoutsidebox, away_shotsoutsidebox, home_goalkeepersaves, away_goalkeepersaves, home_goalsprevented, away_goalsprevented, home_passes, away_passes, home_accuratepasses, away_accuratepasses, home_longballs, away_longballs, home_crosses, away_crosses, home_dribbles, away_dribbles, home_possessionlost, away_possessionlost, home_duelswon, away_duelswon, home_aerialswon, away_aerialswon, home_tackles, away_tackles, home_interceptions, away_interceptions, home_clearances, away_clearances, home_formation, away_formation", *values)
         self._db.commit()
 
 class Scraper:
@@ -114,17 +114,52 @@ class Scraper:
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}"
         response = requests.get(url, headers=self._footapi._headers).json()["event"]
         match_data.append(match_id)
-        match_data.append(response["startTimestamp"])
+        match_data.append(int(response["startTimestamp"]))
         match_data.append(response["homeTeam"]["name"])
-        match_data.append(response["homeScore"]["current"])
+        match_data.append(int(response["homeScore"]["current"]))
         match_data.append(response["awayTeam"]["name"])
-        match_data.append(response["awayScore"]["current"])
+        match_data.append(int(response["awayScore"]["current"]))
         match_data.append(((int(response["referee"]["redCards"]) * 2) + int(response["referee"]["yellowCards"]) + int(response["referee"]["yellowRedCards"])) / (int(response["referee"]["games"])))
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/statistics"
         response = requests.get(url, headers=self._footapi._headers).json()["statistics"][0]["groups"]
+        match_data.append(int(response[1]["statisticsItems"][0]["home"].replace("%", "")))
+        match_data.append(int(response[1]["statisticsItems"][0]["away"].replace("%", "")))
+        for row in response[2]["statisticsItems"]:
+            match_data.append(int(row["home"]))
+            match_data.append(int(row["away"]))
+        for row in response[3]["statisticsItems"]:
+            match_data.append(int(row["home"]))
+            match_data.append(int(row["away"]))
+        for row in response[4]["statisticsItems"]:
+            match_data.append(float(row["home"]))
+            match_data.append(float(row["away"]))
+        match_data.append(int(response[5]["statisticsItems"][0]["home"]))
+        match_data.append(int(response[5]["statisticsItems"][0]["away"]))
+        match_data.append(int(response[5]["statisticsItems"][1]["home"].split(" ")[0]))
+        match_data.append(int(response[5]["statisticsItems"][1]["away"].split(" ")[0]))
+        match_data.append(int(response[5]["statisticsItems"][2]["home"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(response[5]["statisticsItems"][2]["away"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(response[5]["statisticsItems"][3]["home"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(response[5]["statisticsItems"][3]["away"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(response[6]["statisticsItems"][0]["home"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(response[6]["statisticsItems"][0]["away"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(response[6]["statisticsItems"][1]["home"]))
+        match_data.append(int(response[6]["statisticsItems"][1]["away"]))
+        match_data.append(int(response[6]["statisticsItems"][2]["home"]))
+        match_data.append(int(response[6]["statisticsItems"][2]["away"]))
+        for row in response[7]["statisticsItems"]:
+            match_data.append(int(row["home"]))
+            match_data.append(int(row["away"]))
+        url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/lineups"
+        response = requests.get(url, headers=self._footapi._headers).json()
+        match_data.append(response["home"]["formation"])
+        match_data.append(response["away"]["formation"])
         return match_data
 
 
-par = Scraper()
-home_stats, away_stats, match_stats = par.get_match_data(10408291)
-print(f"{home_stats[0]}: {home_stats[1]}, {away_stats[0]}: {away_stats[1]} | Tournament: {match_stats[0]} | Stadium: {match_stats[1]} | Year: {match_stats[2]}")
+scr = Scraper()
+par = Parser()
+par._create_table()
+par._add_row(scr.get_match_data(10408291))
+#par._close_db()
+#print(f"{home_stats[0]}: {home_stats[1]}, {away_stats[0]}: {away_stats[1]} | Tournament: {match_stats[0]} | Stadium: {match_stats[1]} | Year: {match_stats[2]}")
