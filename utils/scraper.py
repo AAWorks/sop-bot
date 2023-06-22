@@ -79,6 +79,8 @@ class Parser:
                 away_interceptions INTEGER,
                 home_clearances INTEGER,
                 away_clearances INTEGER,
+                home_formation TEXT,
+                away_formation TEXT
             )
         ''')
         # The prevented goals stat is calculated by subtracting the number of goals a keeper has conceded from the number of goals a keeper would be expected to concede based on the quality of shots he faced.
@@ -89,7 +91,7 @@ class Parser:
 
     def _add_row(self, values):
         cursor = self._db.cursor()
-        cursor.execute("INSERT INTO mls(match_id, epoch_date, home_team, home_score, away_team, away_score, stadium_name, ref_toughness, home_possession, away_possession, home_totshots, away_totshots, home_shotsontarget, away_shotsontarget, home_shotsofftarget, away_shotsofftarget, home_blockedshots, away_blockedshots, home_cornerkicks, away_cornerkicks, home_offsides, away_offsides, home_fouls, away_fouls, home_yellowcards, away_yellowcards, home_redcards, away_redcards, home_bigchances, away_bigchances, home_bigchancesmissed, away_bigchancesmissed, home_hitwoodwork, away_hitwoodwork, home_counterattacks, away_counterattacks, home_counterattackshotsmissed, away_counterattackshotsmissed, home_shotsinsidebox, away_shotsinsidebox, home_shotsoutsidebox, away_shotsoutsidebox, home_goalkeepersaves, away_goalkeepersaves, home_goalsprevented, away_goalsprevented, home_passes, away_passes, home_accuratepasses, away_accuratepasses, home_longballs, away_longballs, home_crosses, away_crosses, home_dribbles, away_dribbles, home_possessionlost, away_possessionlost, home_duelswon, away_duelswon, home_aerialswon, away_aerialswon, home_tackles, away_tackles, home_interceptions, away_interceptions, home_clearances, away_clearances ...) VALUES(?, ?, ?, ...)", *values)
+        cursor.execute("INSERT INTO mls(match_id, epoch_date, home_team, home_score, away_team, away_score, stadium_name, ref_toughness, home_possession, away_possession, home_totshots, away_totshots, home_shotsontarget, away_shotsontarget, home_shotsofftarget, away_shotsofftarget, home_blockedshots, away_blockedshots, home_cornerkicks, away_cornerkicks, home_offsides, away_offsides, home_fouls, away_fouls, home_yellowcards, away_yellowcards, home_redcards, away_redcards, home_bigchances, away_bigchances, home_bigchancesmissed, away_bigchancesmissed, home_hitwoodwork, away_hitwoodwork, home_counterattacks, away_counterattacks, home_counterattackshotsmissed, away_counterattackshotsmissed, home_shotsinsidebox, away_shotsinsidebox, home_shotsoutsidebox, away_shotsoutsidebox, home_goalkeepersaves, away_goalkeepersaves, home_goalsprevented, away_goalsprevented, home_passes, away_passes, home_accuratepasses, away_accuratepasses, home_longballs, away_longballs, home_crosses, away_crosses, home_dribbles, away_dribbles, home_possessionlost, away_possessionlost, home_duelswon, away_duelswon, home_aerialswon, away_aerialswon, home_tackles, away_tackles, home_interceptions, away_interceptions, home_clearances, away_clearances, home_formation, away_formation ...) VALUES(?, ?, ?, ...)", *values)
         self._db.commit()
 
 class Scraper:
