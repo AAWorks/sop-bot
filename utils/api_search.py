@@ -7,7 +7,7 @@ class FootAPISearch:
 
     def __init__(self):
         self._headers = {
-            "X-RapidAPI-Key": "0b59cdea82msh8c62aa043ee53dcp1d2033jsn82befb9a89bc",
+            "X-RapidAPI-Key": "73e1ea05afmshc2941d30a473462p1c01fejsna11a2078a9dd",
             "X-RapidAPI-Host": "footapi7.p.rapidapi.com"
         }
     

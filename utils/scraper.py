@@ -178,6 +178,15 @@ class Scraper:
         for row in response["events"]:
             ids.append(row["id"])
         return ids
+    def clean_data(input):
+        args = ["/", "%"]
+        found = False
+        for arg in args:
+            if arg in input:
+                found = True
+                return input.split(" ")[1].strip("(").strip(")").replace("%", "")
+        if not(found):
+            return input
 
     def get_match_data(self, match_id): #get all the relevant stats from a match and put them into a list
         match_data = []
@@ -218,16 +227,16 @@ class Scraper:
             else:
                 match_data.append(row["home"])
                 match_data.append(row["away"])
-        match_data.append(int(response[5]["statisticsItems"][0]["home"]))
-        match_data.append(int(response[5]["statisticsItems"][0]["away"]))
+        match_data.append(int(self.clean_data(response[5]["statisticsItems"][0]["home"])))
+        match_data.append(int(self.clean_data(response[5]["statisticsItems"][0]["away"])))
         match_data.append(int(response[5]["statisticsItems"][1]["home"].split(" ")[0]))
         match_data.append(int(response[5]["statisticsItems"][1]["away"].split(" ")[0]))
-        match_data.append(int(response[5]["statisticsItems"][2]["home"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
-        match_data.append(int(response[5]["statisticsItems"][2]["away"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
-        match_data.append(int(response[5]["statisticsItems"][3]["home"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
-        match_data.append(int(response[5]["statisticsItems"][3]["away"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
-        match_data.append(int(response[6]["statisticsItems"][0]["home"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
-        match_data.append(int(response[6]["statisticsItems"][0]["away"].split(" ")[1].strip("(").strip(")").replace("%", ""))) # in percentage
+        match_data.append(int(self.clean_data(response[5]["statisticsItems"][2]["home"]))) # in percentage
+        match_data.append(int(self.clean_data(response[5]["statisticsItems"][2]["away"]))) # in percentage
+        match_data.append(int(self.clean_data(response[5]["statisticsItems"][3]["home"]))) # in percentage
+        match_data.append(int(self.clean_data(response[5]["statisticsItems"][3]["away"]))) # in percentage
+        match_data.append(int(self.clean_data(response[6]["statisticsItems"][0]["home"]))) # in percentage
+        match_data.append(int(self.clean_data(response[6]["statisticsItems"][0]["away"]))) # in percentage
         match_data.append(int(response[6]["statisticsItems"][1]["home"]))
         match_data.append(int(response[6]["statisticsItems"][1]["away"]))
         match_data.append(int(response[6]["statisticsItems"][2]["home"]))
