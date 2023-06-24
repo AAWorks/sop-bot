@@ -2,3 +2,5 @@ requests==2.31.0
 streamlit==1.23.1
 scikit-learn==1.2.2
 xgboost==1.7.6
+regex==2023.6.3
+tensorflow==2.12.0
