@@ -17,15 +17,22 @@ class Scraper:
             return page_num + 1
         return -1
 
-
-    def get_league_match_ids(self, league_id, season_id): #get all the mls leagues match ids
-        ids = []
+    def _get_season_match_ids(self, league_id, season_id, ids):
         next_page = 0
         
         while next_page != -1:
             next_page = self._get_page_match_ids(league_id, season_id, ids, next_page)
+
+    def get_league_match_ids(self, league_id, num_seasons=10): #get all the mls leagues match ids
+        ids = []
+        url = f"https://footapi7.p.rapidapi.com/api/tournament/{league_id}/seasons"
+        response = requests.get(url, headers=self._footapi._headers).json()["seasons"]
+
+        for i in range(num_seasons):
+            season_id = response[i]["id"]
+            self._get_season_match_ids(league_id, season_id, ids)
         
-        with open("data/mls_leagues.txt", "w") as f:
+        with open("data/mls_matches.txt", "w") as f:
             f.write(",".join(ids))
 
     def _clean_data(self, data):
