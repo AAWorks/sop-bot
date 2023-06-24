@@ -89,8 +89,83 @@ class Parser:
 
     def _add_row(self, values):
         cursor = self._db.cursor()
-        cursor.execute("""INSERT INTO mls (match_id, epoch_date, home_team, home_score, away_team, away_score, ref_toughness, home_possession, away_possession, home_totshots, away_totshots, home_shotsontarget, away_shotsontarget, home_shotsofftarget, away_shotsofftarget, home_blockedshots, away_blockedshots, home_cornerkicks, away_cornerkicks, home_offsides, away_offsides, home_fouls, away_fouls, home_yellowcards, away_yellowcards, home_redcards, away_redcards, home_bigchances, away_bigchances, home_bigchancesmissed, away_bigchancesmissed, home_hitwoodwork, away_hitwoodwork, home_counterattacks, away_counterattacks, home_counterattackshotsmissed, away_counterattackshotsmissed, home_shotsinsidebox, away_shotsinsidebox, home_shotsoutsidebox, away_shotsoutsidebox, home_goalkeepersaves, away_goalkeepersaves, home_goalsprevented, away_goalsprevented, home_passes, away_passes, home_accuratepasses, away_accuratepasses, home_longballs, away_longballs, home_crosses, away_crosses, home_dribbles, away_dribbles, home_possessionlost, away_possessionlost, home_duelswon, away_duelswon, home_aerialswon, away_aerialswon, home_tackles, away_tackles, home_interceptions, away_interceptions, home_clearances, away_clearances, home_formation, away_formation)""", *values)
+        cursor.execute("""INSERT INTO mls (
+            match_id, 
+            epoch_date, 
+            home_team, 
+            home_score, 
+            away_team, 
+            away_score, 
+            ref_toughness, 
+            home_possession, 
+            away_possession, 
+            home_totshots, 
+            away_totshots, 
+            home_shotsontarget, 
+            away_shotsontarget, 
+            home_shotsofftarget, 
+            away_shotsofftarget, 
+            home_blockedshots, 
+            away_blockedshots, 
+            home_cornerkicks, 
+            away_cornerkicks, 
+            home_offsides, 
+            away_offsides, 
+            home_fouls, 
+            away_fouls, 
+            home_yellowcards, 
+            away_yellowcards, 
+            home_redcards, 
+            away_redcards, 
+            home_bigchances, 
+            away_bigchances, 
+            home_bigchancesmissed, 
+            away_bigchancesmissed, 
+            home_hitwoodwork, 
+            away_hitwoodwork, 
+            home_counterattacks, 
+            away_counterattacks, 
+            home_counterattackshotsmissed, 
+            away_counterattackshotsmissed, 
+            home_shotsinsidebox, 
+            away_shotsinsidebox, 
+            home_shotsoutsidebox, 
+            away_shotsoutsidebox, 
+            home_goalkeepersaves, 
+            away_goalkeepersaves, 
+            home_goalsprevented, 
+            away_goalsprevented, 
+            home_passes, 
+            away_passes, 
+            home_accuratepasses, 
+            away_accuratepasses, 
+            home_longballs, 
+            away_longballs, 
+            home_crosses, 
+            away_crosses, 
+            home_dribbles, 
+            away_dribbles, 
+            home_possessionlost, 
+            away_possessionlost, 
+            home_duelswon, 
+            away_duelswon, 
+            home_aerialswon, 
+            away_aerialswon, 
+            home_tackles, 
+            away_tackles, 
+            home_interceptions, 
+            away_interceptions, 
+            home_clearances, 
+            away_clearances, 
+            home_formation, 
+            away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
         self._db.commit()
+    
+    def peek(self):
+        cursor = self._db.cursor()
+        cursor.execute("SELECT * FROM mls")
+        data = cursor.fetchall()
+        return data
 
 class Scraper:
     def __init__(self):
@@ -98,14 +173,11 @@ class Scraper:
 
     def get_league_match_ids(self, league_id): #get all the mls leagues match ids
         ids = []
-        url = f"https://footapi7.p.rapidapi.com/api/tournament/242/season/{league_id}/matches/last/0"
+        url = f"https://footapi7.p.rapidapi.com/api/tournament/{league_id}/season/47955/matches/last/0"
         response = requests.get(url, headers=self._footapi._headers).json()
         for row in response["events"]:
             ids.append(row["id"])
         return ids
-        
-    def get_league_matches(self, league_id): #skip this for now
-        pass
 
     def get_match_data(self, match_id): #get all the relevant stats from a match and put them into a list
         match_data = []
@@ -144,8 +216,8 @@ class Scraper:
                 match_data.append(float(row["home"]))
                 match_data.append(float(row["away"]))
             else:
-                match_data.append(int(row["home"]))
-                match_data.append(int(row["away"]))
+                match_data.append(row["home"])
+                match_data.append(row["away"])
         match_data.append(int(response[5]["statisticsItems"][0]["home"]))
         match_data.append(int(response[5]["statisticsItems"][0]["away"]))
         match_data.append(int(response[5]["statisticsItems"][1]["home"].split(" ")[0]))
@@ -169,13 +241,17 @@ class Scraper:
         response = requests.get(url, headers=self._footapi._headers).json()
         match_data.append(response["home"]["formation"])
         match_data.append(response["away"]["formation"])
+        print(len(match_data))
         return tuple(match_data)
 
 
 scr = Scraper()
 par = Parser()
 par._create_table()
-#par._add_row(scr.get_match_data(10408291))
+ids = scr.get_league_match_ids(242)
+for id in ids:
+    par._add_row(scr.get_match_data(id))
+print(par.peek())
 
 #par._close_db()
 #print(f"{home_stats[0]}: {home_stats[1]}, {away_stats[0]}: {away_stats[1]} | Tournament: {match_stats[0]} | Stadium: {match_stats[1]} | Year: {match_stats[2]}")
