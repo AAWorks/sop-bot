@@ -173,7 +173,7 @@ class Parser:
         # The prevented goals stat is calculated by subtracting the number of goals a keeper has conceded from the number of goals a keeper would be expected to concede based on the quality of shots he faced.
         self._db.commit()
 
-    def _close_db(self):
+    def close_db(self):
         self._db.close()
 
     def _add_row(self, values):
@@ -250,12 +250,12 @@ class Parser:
             away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
         self._db.commit()
     
-    def add_page_matches(self, id_file):
+    def add_match_data(self, id_file, scraper):
         with open(id_file, "r") as f:
             ids = f.readline().split(",")
 
         for id in ids:
-            self._add_row(int(id))
+            self._add_row(scraper.get_match_data(int(id)))
     
     def peek(self):
         cursor = self._db.cursor()
@@ -264,9 +264,15 @@ class Parser:
         return data
 
 
-scr = Scraper()
-par = Parser()
-scr.get_league_match_ids(242, 47955)
+def get_ids(scr):
+    scr.get_league_match_ids(242, 47955)
 
-#par._close_db()
-#print(f"{home_stats[0]}: {home_stats[1]}, {away_stats[0]}: {away_stats[1]} | Tournament: {match_stats[0]} | Stadium: {match_stats[1]} | Year: {match_stats[2]}")
+def process_match_data(par, scr):
+    par.add_match_data("data/mls_matches.txt", scr)
+
+def run():
+    scr = Scraper()
+    par = Parser()
+    get_ids(scr)
+    process_match_data(par, scr)
+    par.close_db()
