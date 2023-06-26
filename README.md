@@ -1,7 +1,7 @@
 # sop-bot
 Sports Outcome Prediction bot
 
-## Currently In-Progress
+### Status: In-Progress
 
 ## Current Details
 ### FootAPI
