@@ -52,7 +52,7 @@ class Scraper:
         match_data.append(int(response["homeScore"]["current"]))
         match_data.append(response["awayTeam"]["name"])
         match_data.append(int(response["awayScore"]["current"]))
-        match_data.append(((int(response["referee"]["redCards"]) * 2) + int(response["referee"]["yellowCards"]) + int(response["referee"]["yellowRedCards"])) / (int(response["referee"]["games"])))
+
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/statistics"
         response = requests.get(url, headers=self._footapi._headers).json()["statistics"][0]["groups"]
         match_data.append(int(response[1]["statisticsItems"][0]["home"].replace("%","")))
