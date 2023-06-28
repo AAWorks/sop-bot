@@ -1,4 +1,4 @@
 setup:
-	pip3 install -r requirements.txt
+	pip install -r requirements.txt
 run:
-	python3 app/__init__.py
+	python3 -m streamlit main.py
