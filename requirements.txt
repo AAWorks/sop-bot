@@ -4,3 +4,4 @@ scikit-learn==1.2.2
 xgboost==1.7.6
 regex==2023.6.3
 tensorflow==2.12.0
+make==0.1.6.post2
