@@ -6,34 +6,35 @@ import sqlite3, requests
 class Scraper:
     def __init__(self):
         self._footapi = FootAPISearch()
+        self._ids = []
 
-    def _get_page_match_ids(self, league_id, season_id, ids, page_num):
+    def _get_page_match_ids(self, league_id, season_id, page_num):
         url = f"https://footapi7.p.rapidapi.com/api/tournament/{league_id}/season/{season_id}/matches/last/{page_num}"
         response = requests.get(url, headers=self._footapi._headers).json()
         for row in response["events"]:
-            ids.append(str(row["id"]))
+            self._ids.append(str(row["id"]))
         
         if response["hasNextPage"]:
             return page_num + 1
         return -1
 
-    def _get_season_match_ids(self, league_id, season_id, ids):
+    def _get_season_match_ids(self, league_id, season_id):
         next_page = 0
         
         while next_page != -1:
-            next_page = self._get_page_match_ids(league_id, season_id, ids, next_page)
+            next_page = self._get_page_match_ids(league_id, season_id, next_page)
 
     def get_league_match_ids(self, league_id, num_seasons=10): #get all the mls leagues match ids
-        ids = []
+        self._ids = []
         url = f"https://footapi7.p.rapidapi.com/api/tournament/{league_id}/seasons"
         response = requests.get(url, headers=self._footapi._headers).json()["seasons"]
 
         for i in range(num_seasons):
             season_id = response[i]["id"]
-            self._get_season_match_ids(league_id, season_id, ids)
+            self._get_season_match_ids(league_id, season_id)
         
-        with open("data/mls_matches.txt", "w") as f:
-            f.write(",".join(ids))
+        with open("data/mls_match_ids.txt", "w") as f:
+            f.write(",".join(self._ids))
 
     def _clean_data(self, data):
         if "%" in data:
