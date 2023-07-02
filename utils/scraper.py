@@ -46,17 +46,21 @@ class Scraper:
     def _get_data_sects(self, response):
         all_sects = {
             "Possession": 0,
-            "shots adkjfas": 0,
-
+            "Shots": 0,
+            "TVData": 0,
+            "Shots extra": 0,
+            "Passes": 0,
+            "Duels": 0,
+            "Defending": 0
         }
+        i = 0
 
-        for label in response:
-            if str(label).is_numeric():
-                sect = int(label)
-                sect_name = response[sect]["groupName"]
-                if sect_name in all_sects:
-                    all_sects[sect_name] = sect
-                
+        for sect in response:
+            sect_name = sect["groupName"]
+            if sect_name in all_sects:
+                all_sects[sect_name] = i
+            i += 1
+        
         return all_sects
 
     def get_match_data(self, match_id): #get all the relevant stats from a match and put them into a list
@@ -76,17 +80,17 @@ class Scraper:
         sects = self._get_data_sects(response)
 
         match_data.append(int(response[sects["Possession"]]["statisticsItems"][0]["home"].replace("%","")))
-        match_data.append(int(response[1]["statisticsItems"][0]["away"].replace("%","")))
-        for row in response[2]["statisticsItems"]:
+        match_data.append(int(response[sects["Possession"]]["statisticsItems"][0]["away"].replace("%","")))
+        for row in response[sects["Shots"]]["statisticsItems"]:
             match_data.append(int(row["home"]))
             match_data.append(int(row["away"]))
         try:
-            match_data.append(int(response[3]["statisticsItems"][4]["home"]))
-            match_data.append(int(response[3]["statisticsItems"][4]["away"]))
+            match_data.append(int(response[sects["TVData"]]["statisticsItems"][4]["home"]))
+            match_data.append(int(response[sects["TVData"]]["statisticsItems"][4]["away"]))
         except:
             match_data.append(0)
             match_data.append(0)
-        for row in response[4]["statisticsItems"]:
+        for row in response[sects["Shots extra"]]["statisticsItems"]:
             if "." in row["home"]:
                 match_data.append(float(row["home"]))
                 match_data.append(float(row["away"]))
@@ -95,14 +99,11 @@ class Scraper:
                 match_data.append(row["away"])
         
         for typ in ("home", "away"):
-            for i in (3, 5, 6):
+            for i in (sects["TVData"], sects["Passes"], sects["Duels"]):
                 for j in range(4):
-                    try:
-                        match_data.append(self._clean_data(response[i]["statisticsItems"][j][typ]))
-                    except:
-                        match_data.append(0)
+                    match_data.append(self._clean_data(response[i]["statisticsItems"][j][typ]))
         
-        for row in response[7]["statisticsItems"]:
+        for row in response[sects["Defending"]]["statisticsItems"]:
             match_data.append(int(row["home"]))
             match_data.append(int(row["away"]))
 
