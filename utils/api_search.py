@@ -6,8 +6,11 @@ class FootAPISearch:
     _headers: dict
 
     def __init__(self):
+        with open("data/footapi-key.txt", "r") as keyfile:
+            key = keyfile.readline().strip()
+
         self._headers = {
-            "X-RapidAPI-Key": "41cb3ca06bmshe5c2195f078e2e2p1dc0acjsn58ee906dc98d",
+            "X-RapidAPI-Key": str(key),
             "X-RapidAPI-Host": "footapi7.p.rapidapi.com"
         }
     
