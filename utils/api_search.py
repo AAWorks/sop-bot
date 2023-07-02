@@ -6,7 +6,7 @@ class FootAPISearch:
     _headers: dict
 
     def __init__(self):
-        with open("data/footapi-key.txt", "r") as keyfile:
+        with open("data/footapi_key.txt", "r") as keyfile:
             key = keyfile.readline().strip()
 
         self._headers = {
