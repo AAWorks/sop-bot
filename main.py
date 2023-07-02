@@ -5,6 +5,7 @@ import pandas as pd
 st.set_page_config(layout="wide", page_title="SOP Bot", page_icon=":soccer:")
 st.title('Welcome to SOP Bot :gear:')
 st.caption("A Proprietary Soccer Outcome Prediction Algorithm By Alejandro and Andres Alonso")
+
 predict, userinput = False, False
 accepted_leagues = ["mls"]
 with st.form("league"):

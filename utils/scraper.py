@@ -42,6 +42,22 @@ class Scraper:
             match = seq.search(data)
             data = match.group()[:-1]
         return int(data)
+    
+    def _get_data_sects(self, response):
+        all_sects = {
+            "Possession": 0,
+            "shots adkjfas": 0,
+
+        }
+
+        for label in response:
+            if str(label).is_numeric():
+                sect = int(label)
+                sect_name = response[sect]["groupName"]
+                if sect_name in all_sects:
+                    all_sects[sect_name] = sect
+                
+        return all_sects
 
     def get_match_data(self, match_id): #get all the relevant stats from a match and put them into a list
         match_data = []
@@ -56,7 +72,10 @@ class Scraper:
 
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/statistics"
         response = requests.get(url, headers=self._footapi._headers).json()["statistics"][0]["groups"]
-        match_data.append(int(response[1]["statisticsItems"][0]["home"].replace("%","")))
+
+        sects = self._get_data_sects(response)
+
+        match_data.append(int(response[sects["Possession"]]["statisticsItems"][0]["home"].replace("%","")))
         match_data.append(int(response[1]["statisticsItems"][0]["away"].replace("%","")))
         for row in response[2]["statisticsItems"]:
             match_data.append(int(row["home"]))
@@ -78,8 +97,11 @@ class Scraper:
         for typ in ("home", "away"):
             for i in (3, 5, 6):
                 for j in range(4):
-                    match_data.append(self._clean_data(response[i]["statisticsItems"][j][typ]))
-
+                    try:
+                        match_data.append(self._clean_data(response[i]["statisticsItems"][j][typ]))
+                    except:
+                        match_data.append(0)
+        
         for row in response[7]["statisticsItems"]:
             match_data.append(int(row["home"]))
             match_data.append(int(row["away"]))
