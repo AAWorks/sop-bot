@@ -37,8 +37,10 @@ class Scraper:
             f.write(",".join(self._ids))
 
     def _clean_data(self, data: str):
+        if "0%" in data:
+            return 0
         if "%" in data:
-            seq = re.compile(r"\b(?<!\.)(?!0+(?:\.0+)?%)(?:\d|[1-9]\d|100)(?:(?<!100)\.\d+)?%")
+            seq = re.compile(r"(?<!\.)(?!0+(?:\.0+)?%)(?:\d|[1-9]\d|100)(?:(?<!100)\.\d+)?%")
             match = seq.search(data)
             data = match.group()[:-1]
         return int(data)
@@ -87,8 +89,8 @@ class Scraper:
 
         shot_stats = {row["name"]:row for row in response[stat_groups["Shots"]]["statisticsItems"]}
         if "Shots on target" in shot_stats:
-            match_data.append(int(row["home"])) #home shots on target
-            match_data.append(int(row["away"])) #away shots on target
+            match_data.append(int(shot_stats["Shots on target"]["home"])) #home shots on target
+            match_data.append(int(shot_stats["Shots on target"]["away"])) #away shots on target
             if "Total shots" in shot_stats:
                 match_data.append(int(shot_stats['Total shots']["home"])) #home tot shots
                 match_data.append(int(shot_stats['Total shots']["away"])) #away tot shots
@@ -131,8 +133,8 @@ class Scraper:
         def_stats = {row["name"]:row for row in response[stat_groups["Defending"]]["statisticsItems"] if row["name"] in def_headers}
         for grp in def_headers:
             if grp in def_stats:
-                match_data.append(self._clean_data(tvdata_stats[grp]["home"])) # home - tackles, intercepts, clears
-                match_data.append(self._clean_data(tvdata_stats[grp]["away"])) # away - tackles, intercepts, clears
+                match_data.append(self._clean_data(def_stats[grp]["home"])) # home - tackles, intercepts, clears
+                match_data.append(self._clean_data(def_stats[grp]["away"])) # away - tackles, intercepts, clears
             else:
                 match_data.append(0)
                 match_data.append(0)

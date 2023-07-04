@@ -63,8 +63,7 @@ class Parser:
         self._db.close()
 
     def _add_row(self, values):
-        print(len(values))
-        if len(values) != 68:
+        if len(values) != 46:
             return
         cursor = self._db.cursor()
         cursor.execute("""INSERT INTO mls (

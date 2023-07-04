@@ -16,7 +16,7 @@ def peek():
 def extract_data():
     scr = scrape.Scraper()
     par = parse.Parser()
-    #scr.get_league_match_ids(242)
+    #scr.get_league_match_ids(242, 8)
     par.add_match_data("data/mls_match_ids.txt", scr)
     par.close_db()
 
