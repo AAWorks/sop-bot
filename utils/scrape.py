@@ -122,8 +122,13 @@ class Scraper:
                 match_data.append(self._clean_data(row["home"])) # home - passes, accurate, long balls, crosses
                 match_data.append(self._clean_data(row["away"])) # away - passes, accurate, long balls, crosses
         
+        for row in response[stat_groups["Duels"]]["statisticsItems"]:
+            if row["name"] == "Dribbles":
+                match_data.append(self._clean_data(row["home"]))
+                match_data.append(self._clean_data(row["away"]))
+
         def_headers = ("Tackles", "Interceptions", "Clearances")
-        def_stats = {row["name"]:row for row in response[stat_groups["Passes"]]["statisticsItems"] if row["name"] in def_headers}
+        def_stats = {row["name"]:row for row in response[stat_groups["Defending"]]["statisticsItems"] if row["name"] in def_headers}
         for grp in def_headers:
             if grp in def_stats:
                 match_data.append(self._clean_data(tvdata_stats[grp]["home"])) # home - tackles, intercepts, clears
