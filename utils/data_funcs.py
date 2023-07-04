@@ -1,4 +1,4 @@
-import scraper, parser
+import scrape, parse
 
 def count_file_data(filename):
     with open(filename, "r") as f:
@@ -10,9 +10,12 @@ def get_ids(scr):
 def process_match_data(par, scr, filename):
     par.add_match_data(filename, scr)
 
+def peek():
+    print(parse.Parser().peek())
+
 def extract_data():
-    scr = scraper.Scraper()
-    par = parser.Parser()
+    scr = scrape.Scraper()
+    par = parse.Parser()
     #scr.get_league_match_ids(242)
     par.add_match_data("data/mls_match_ids.txt", scr)
     par.close_db()
