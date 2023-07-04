@@ -1,6 +1,4 @@
-from api_search import FootAPISearch
-import regex as re
-import sqlite3, requests
+import sqlite3
 
 class Parser:
     def __init__(self):
@@ -87,8 +85,10 @@ class Parser:
         self._db.close()
 
     def _add_row(self, values):
-        cursor = self._db.cursor()
         print(len(values))
+        if len(values) != 68:
+            return
+        cursor = self._db.cursor()
         cursor.execute("""INSERT INTO mls (
             match_id, 
             epoch_date, 
