@@ -1,4 +1,3 @@
-from utils.api_search import FootAPISearch
 import streamlit as st
 import pandas as pd
 
