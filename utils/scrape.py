@@ -36,7 +36,7 @@ class Scraper:
         with open("data/mls_match_ids.txt", "w") as f:
             f.write(",".join(self._ids))
 
-    def _clean_data(self, data):
+    def _clean_data(self, data: str):
         if "%" in data:
             seq = re.compile(r"\b(?<!\.)(?!0+(?:\.0+)?%)(?:\d|[1-9]\d|100)(?:(?<!100)\.\d+)?%")
             match = seq.search(data)
@@ -97,36 +97,44 @@ class Scraper:
                 away_shots = [shot_stats[grp]["away"] for grp in ("Shots on target", "Shots off target", "Blocked shots") if grp in shot_stats]
                 match_data.append(int(sum(home_shots))) #home tot shots
                 match_data.append(int(sum(away_shots))) #away tot shots
+        
+        shots_extra_headers = ("Big chances", "Shots inside box", "Goalkeeper saves")
+        shots_extra_stats = {row["name"]:row for row in response[stat_groups["Shots extra"]]["statisticsItems"] if row["name"] in shots_extra_headers}
+        if len(shots_extra_stats) == 3:
+            for row in shots_extra_stats.values():
+                match_data.append(int(row["home"])) # home - big chances, shots in box, saves
+                match_data.append(int(row["away"])) # away - big chances, shots in box, saves
+        
+        tvdata_headers = ("Corner kicks", "Offsides", "Fouls", "Yellow cards", "Red cards")
+        tvdata_stats = {row["name"]:row for row in response[stat_groups["TVData"]]["statisticsItems"] if row["name"] in tvdata_headers}
+        for grp in tvdata_headers:
+            if grp in tvdata_stats:
+                match_data.append(int(tvdata_stats[grp]["home"])) # home - corners, offsides, fouls, yellows, reds
+                match_data.append(int(tvdata_stats[grp]["away"])) # away - corners, offsides, fouls, yellows, reds
+            else:
+                match_data.append(0)
+                match_data.append(0)
 
-        try:
-            match_data.append(int(response[stat_groups["TVData"]]["statisticsItems"][4]["home"]))
-            match_data.append(int(response[stat_groups["TVData"]]["statisticsItems"][4]["away"]))
-        except:
-            match_data.append(0)
-            match_data.append(0)
+        passes_headers = ("Passes", "Accurate passes", "Long balls", "Crosses")
+        passes_stats = {row["name"]:row for row in response[stat_groups["Passes"]]["statisticsItems"] if row["name"] in passes_headers}
+        if len(passes_stats) == 4:
+            for row in passes_stats.values():
+                match_data.append(self._clean_data(row["home"])) # home - passes, accurate, long balls, crosses
+                match_data.append(self._clean_data(row["away"])) # away - passes, accurate, long balls, crosses
         
-        shots_extra_stats = {row["name"]:row for row in response[stat_groups["Shots extra"]]["statisticsItems"] if row["name"] in ("Big chances", "Shots inside box", "Goalkeeper saves")}
-        
-        if len(shots_extra_stats) >= 2:
-            for grp in shots_extra_stats:
-                match_data.append(int(shots_extra_stats[grp]["home"]))
-                match_data.append(int(shots_extra_stats[grp]["away"]))
-        
-        for typ in ("home", "away"):
-            for i in (stat_groups["TVData"], stat_groups["Passes"], stat_groups["Duels"]):
-                for j in range(4):
-                    try:
-                        match_data.append(self._clean_data(response[i]["statisticsItems"][j][typ]))
-                    except:
-                        match_data.append(0)
-        
-        for row in response[stat_groups["Defending"]]["statisticsItems"]:
-            match_data.append(int(row["home"]))
-            match_data.append(int(row["away"]))
+        def_headers = ("Tackles", "Interceptions", "Clearances")
+        def_stats = {row["name"]:row for row in response[stat_groups["Passes"]]["statisticsItems"] if row["name"] in def_headers}
+        for grp in def_headers:
+            if grp in def_stats:
+                match_data.append(self._clean_data(tvdata_stats[grp]["home"])) # home - tackles, intercepts, clears
+                match_data.append(self._clean_data(tvdata_stats[grp]["away"])) # away - tackles, intercepts, clears
+            else:
+                match_data.append(0)
+                match_data.append(0)
 
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/lineups"
         response = requests.get(url, headers=self._footapi._headers).json()
-        match_data.append(response["home"]["formation"])
-        match_data.append(response["away"]["formation"])
+        match_data.append(response["home"]["formation"]) # home formation
+        match_data.append(response["away"]["formation"]) # away formation
 
         return tuple(match_data)
