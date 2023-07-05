@@ -115,9 +115,15 @@ class Parser:
             away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
         self._db.commit()
     
-    def add_match_data(self, id_file, scraper):
+    def add_match_data(self, id_file, scraper, chunk_size, current_chunk):
         with open(id_file, "r") as f:
             ids = f.readline().split(",")
+        
+        filelength = len(ids)
+        n_chunks = (filelength // chunk_size) + 1
+        starting_id = current_chunk * n_chunks
+        ending_id = starting_id + chunk_size
+        ids = ids[starting_id : min(ending_id, filelength)]
 
         for id in ids:
             self._add_row(scraper.get_match_data(int(id)))

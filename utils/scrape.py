@@ -67,8 +67,13 @@ class Scraper:
 
     def get_match_data(self, match_id): #get all the relevant stats from a match and put them into a list
         match_data = []
+
         url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}"
         response = requests.get(url, headers=self._footapi._headers).json()["event"]
+
+        if not response["homeScore"] or not response["awayScore"]:
+            return ()
+
         match_data.append(match_id) #matchid
         match_data.append(int(response["startTimestamp"])) #timestamp
         match_data.append(response["homeTeam"]["name"]) #homename

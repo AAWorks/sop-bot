@@ -13,11 +13,11 @@ def process_match_data(par, scr, filename):
 def peek():
     print(parse.Parser().peek())
 
-def extract_data():
+def extract_data(chunk_size, curr):
     scr = scrape.Scraper()
     par = parse.Parser()
     #scr.get_league_match_ids(242, 8)
-    par.add_match_data("data/mls_match_ids.txt", scr)
+    par.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr)
     par.close_db()
 
-extract_data()
+extract_data(300, 0)
