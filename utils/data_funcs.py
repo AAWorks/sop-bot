@@ -20,4 +20,4 @@ def extract_data(chunk_size, curr):
     par.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr)
     par.close_db()
 
-extract_data(300, 2)
+extract_data(300, 3)
