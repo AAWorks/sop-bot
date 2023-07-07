@@ -1,15 +1,16 @@
+import scrape
 import sqlite3
 
 class Parser:
     def __init__(self):
         self._db = sqlite3.connect('data/soccer_data.db')
-        self._create_table()
 
     def _create_table(self):
         cursor = self._db.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS mls
                 (match_id INTEGER,
+                league TEXT,
                 epoch_date INTEGER,
                 home_team TEXT,
                 home_score INTEGER,
@@ -59,15 +60,19 @@ class Parser:
         # The prevented goals stat is calculated by subtracting the number of goals a keeper has conceded from the number of goals a keeper would be expected to concede based on the quality of shots he faced.
         self._db.commit()
 
-    def close_db(self):
-        self._db.close()
-
     def _add_row(self, values):
-        if len(values) != 46:
+        if len(values) != 47:
             return
+
         cursor = self._db.cursor()
+        cursor.execute(f"SELECT * FROM mls WHERE match_id = {values[0]}")
+        existing_match = cursor.fetchall()
+        if existing_match:
+            return
+
         cursor.execute("""INSERT INTO mls (
             match_id, 
+            league,
             epoch_date, 
             home_team, 
             home_score, 
@@ -112,10 +117,10 @@ class Parser:
             home_clearances, 
             away_clearances, 
             home_formation, 
-            away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
+            away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
         self._db.commit()
     
-    def add_match_data(self, id_file, scraper, chunk_size, current_chunk):
+    def _add_match_data(self, id_file, scraper, chunk_size, current_chunk):
         with open(id_file, "r") as f:
             ids = f.readline().split(",")
         
@@ -128,8 +133,20 @@ class Parser:
         for id in ids:
             self._add_row(scraper.get_match_data(int(id)))
     
+    def setup_db(self):
+        self._create_table()
+        #scr.get_league_match_ids(242, 8)
+    
+    def pull_mls_data(self, chunk_size, curr):
+        scr = scrape.Scraper()
+        self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr)
+
     def peek(self):
         cursor = self._db.cursor()
         cursor.execute("SELECT * FROM mls")
         data = cursor.fetchall()
         return data
+    
+    def close_db(self):
+        self._db.close()
+
