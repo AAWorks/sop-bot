@@ -75,7 +75,6 @@ class Scraper:
             return ()
 
         match_data.append(match_id) #matchid
-        match_data.append(response["tournament"]["slug"]) #league slug (i.e. uefa-champions-league)
         match_data.append(int(response["startTimestamp"])) #timestamp
         match_data.append(response["homeTeam"]["name"]) #homename
         match_data.append(int(response["homeScore"]["current"])) #homescore

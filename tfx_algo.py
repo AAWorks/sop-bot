@@ -4,8 +4,13 @@ import csv
 
 TRAINING_SET_FRACTION = 0.90
 
-def get_dataset():
-    pass
+def get_dataset(data):
+    aggregate_depth
+    for match in data.all_but_last_n_matches("mls", aggregate_depth):
+        aggregate = data.aggregate_match_data(match, aggregate_depth)
+        # ^INSIDE -> aggregate_team_stats(team, )
+
+    
 
 def main(argv):
     data = dataset.Dataset('data/book.csv')
