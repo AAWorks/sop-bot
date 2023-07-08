@@ -142,6 +142,12 @@ class Parser:
         scr = scrape.Scraper()
         self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, league)
 
+    def all_but_last_n_matches(self, league_name: str, agg_depth: int) -> list: # all matches but the last 10
+        pass
+
+    def aggregate_match_data(self, match: tuple, agg_depth: int):
+        pass
+
     def peek(self):
         cursor = self._db.cursor()
         cursor.execute("SELECT * FROM mls")
