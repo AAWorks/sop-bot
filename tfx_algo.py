@@ -2,23 +2,28 @@ import tensorflow as tf
 import numpy as np
 import csv
 
+import utils.parse as parse
+import utils.scrape as scrape
+
 TRAINING_SET_FRACTION = 0.90
 
-def get_dataset(data):
+def get_dataset(data: parse.Parser):
 
     aggregate_depth = 10
 
-    prepped_data = []
+    prepped_data, headers = [], data.get_headers("mls")
     for match in data.all_but_last_n_matches("mls", aggregate_depth):
         aggregate = data.aggregate_match_data(match, aggregate_depth)
         # ^INSIDE -> aggregate_team_stats(team, )
-        prepped_data.append(aggregate)
-
-
+        prepped_data.append(dict(zip(headers, aggregate)))
+    
+    return prepped_data
 
 
 def main(argv):
-    data = dataset.Dataset('data/book.csv')
+    parser = parse.Parser()
+    data = get_dataset(parser)
+    parser.close_db()
 
     train_results_len = int(TRAINING_SET_FRACTION * len(data.processed_results))
     train_results = data.processed_results[:train_results_len]
