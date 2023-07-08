@@ -130,7 +130,13 @@ class Parser:
 
         for id in ids:
             self._add_row(scraper.get_match_data(int(id)), league)
-    
+
+    def table_headers(self, tablename):
+        cursor = self._db.cursor()
+        cursor.execute(f"PRAGMA table_info({tablename});")
+        data = cursor.fetchall()
+        return data
+
     def pull_league_data(self, chunk_size, curr, league="mls"):
         self._create_table(league)
         scr = scrape.Scraper()
