@@ -23,9 +23,12 @@ def delete_duplicates(league_name):
     all_rows = cursor.fetchall()
 
     for row in all_rows:
-        if row["match_id"] in match_ids:
-            rowid = row["rowid"]
+        if row[1] in match_ids:
+            rowid = row[0]
             cursor.execute(f"DELETE from {league_name} where rowid = {rowid}")
+            sqliteConnection.commit()
         else:
-            match_ids.append(row["match_id"])
+            match_ids.append(row[1])
 
+
+delete_duplicates("mls")
