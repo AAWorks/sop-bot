@@ -5,14 +5,17 @@ class Dataset:
     def __init__(self, league):
         self._db = sqlite3.connect('data/soccer_data.db')
         self._league_name = league
-        self._create_table(league)
+        self._create_table()
     
     @property
     def table_headers(self):
         cursor = self._db.cursor()
         cursor.execute(f"PRAGMA table_info({self._league_name});")
-        data = cursor.fetchall()
-        return data
+        headers = cursor.fetchall()
+        res = []
+        for header in headers:
+            res.append(header[1])
+        return res
 
     def _create_table(self):
         cursor = self._db.cursor()
@@ -146,58 +149,63 @@ class Dataset:
         scr = utils.scrape.Scraper()
         self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, self._league_name)
 
-    def all_but_last_n_matches(self, agg_depth: int) -> list: # all matches but the last 10
+    def all_matches(self) -> list: # all matches but the last 10
         cursor = self._db.cursor()
-        cursor.execute(f"SELECT * from {self._league_name} ORDER BY epoch_date")
+        cursor.execute(f"SELECT rowid, * from {self._league_name} ORDER BY epoch_date")
         data = cursor.fetchall()
-        return data[:-agg_depth]
+        return data
     
     def _get_last_n_matches_of_team(self, team_name, rowid, agg_depth):
         cursor = self._db.cursor()
+        rowid = int(rowid)
 
-        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = {team_name} OR away_team = {team_name}")
+        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND rowid > {rowid} ORDER BY epoch_date")
         team_matches = cursor.fetchall()
 
-        rowid = int(rowid)
-        matches = []
-        for match in team_matches:
-            if int(match[0]) in range(rowid + 1, rowid + agg_depth):
-                matches.append(match)
+        if len(team_matches) >= agg_depth:
+            team_matches = team_matches[:agg_depth]
+        else:
+            return []
         
-        return matches
+        return [dict(zip(["rowid"] + self.table_headers, match)) for match in team_matches]
     
     def _sum_column(self, to_sum, teamname, key):
         agg = 0
         column = key.split("_")[-1]
 
         for match in to_sum:
-            prefix = "home_" if match[2] == teamname else "away_" # 2: home, 4: away
+            prefix = "home_" if match["home_team"] == teamname else "away_" # 2: home, 4: away
             agg += match[prefix + column]
         
         return agg
 
     def _aggregate_match_data(self, match: dict, agg_depth: int):
-        rowid = match[0]
+        rowid = match["rowid"]
+        home, away = match["home_team"], match["away_team"]
 
-        home_matches = self._get_last_n_matches_of_team(self, self._leauge_name, match["home_team"], rowid, agg_depth)
-        away_matches = self._get_last_n_matches_of_team(self, self._league_name, match["away_team"], rowid, agg_depth)
+        home_matches = self._get_last_n_matches_of_team(home, rowid, agg_depth)
+        away_matches = self._get_last_n_matches_of_team(away, rowid, agg_depth)
+
+        if not home_matches or not away_matches:
+            return []
         
         for col in match:
             if str(match[col]).isnumeric():
                 if "home" in col:
-                    match[col] += self._sum_column(home_matches, match["home"], col)
+                    match[col] += self._sum_column(home_matches, home, col)
                 elif "away" in col:
-                    match[col] += self._sum_column(away_matches, match["away"], col)
+                    match[col] += self._sum_column(away_matches, away, col)
         
         return match
     
     def aggregate_data(self, aggregate_depth):
-        aggregated_data, headers = [], self.table_headers()
-        for match in self.all_but_last_n_matches(aggregate_depth):
+        aggregated_data, headers = [], ["rowid"] + self.table_headers
+        for match in self.all_matches():
             match_dict = dict(zip(headers, match))
             aggregate = self._aggregate_match_data(match_dict, aggregate_depth)
             # ^INSIDE -> aggregate_team_stats(team, )
-            aggregated_data.append(aggregate)
+            if aggregate:
+                aggregated_data.append(aggregate)
         
         return aggregated_data
 
@@ -208,8 +216,10 @@ class Dataset:
         cursor = self._db.cursor()
         cursor.execute(f"SELECT * FROM {self._league_name}")
         data = cursor.fetchall()
-        return data
+        return [dict(zip(self.table_headers, row)) for row in data]
     
     def close_db(self):
         self._db.close()
 
+data = Dataset("mls")
+data.pull_league_data(300, 0)
