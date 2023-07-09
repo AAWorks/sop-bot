@@ -1,4 +1,4 @@
-import utils.scrape
+import scrape
 import sqlite3
 
 class Dataset:
@@ -145,9 +145,8 @@ class Dataset:
                 self._add_row(scraper.get_match_data(int(id)))
 
     def pull_league_data(self, chunk_size, curr):
-        self._create_table(self._league_name)
-        scr = utils.scrape.Scraper()
-        self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, self._league_name)
+        scr = scrape.Scraper()
+        self._add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr)
 
     def all_matches(self) -> list: # all matches but the last 10
         cursor = self._db.cursor()
@@ -222,4 +221,4 @@ class Dataset:
         self._db.close()
 
 data = Dataset("mls")
-data.pull_league_data(300, 0)
+data.pull_league_data(300, 1)
