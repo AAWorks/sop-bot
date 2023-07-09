@@ -1,6 +1,6 @@
-from search import FootAPISearch
+from utils.search import FootAPISearch
 import regex as re
-import sqlite3, requests
+import requests
 
 
 class Scraper:

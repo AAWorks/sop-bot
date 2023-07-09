@@ -1,4 +1,4 @@
-import scrape
+import utils.scrape
 import sqlite3
 
 class Parser:
@@ -139,7 +139,7 @@ class Parser:
 
     def pull_league_data(self, chunk_size, curr, league="mls"):
         self._create_table(league)
-        scr = scrape.Scraper()
+        scr = utils.scrape.Scraper()
         self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, league)
 
     def all_but_last_n_matches(self, league_name: str, agg_depth: int) -> list: # all matches but the last 10
@@ -172,7 +172,7 @@ class Parser:
         
         return agg
 
-    def aggregate_match_data(self, league_name: str, match: dict, agg_depth: int):
+    def _aggregate_match_data(self, league_name: str, match: dict, agg_depth: int):
         rowid = match[0]
 
         home_matches = self._get_last_n_matches_of_team(self, league_name, match["home_team"], rowid, agg_depth)
@@ -186,7 +186,16 @@ class Parser:
                     match[col] += self._sum_column(away_matches, match["away"], col)
         
         return match
-                
+    
+    def aggregate_data(self, aggregate_depth):
+        aggregated_data, headers = [], self.get_headers("mls")
+        for match in self.all_but_last_n_matches("mls", aggregate_depth):
+            match_dict = dict(zip(headers, aggregate))
+            aggregate = self._aggregate_match_data("mls", match_dict, aggregate_depth)
+            # ^INSIDE -> aggregate_team_stats(team, )
+            aggregated_data.append(match_dict)
+        
+        return aggregated_data
 
     def peek(self):
         cursor = self._db.cursor()
