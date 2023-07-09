@@ -131,10 +131,11 @@ class Dataset:
             ids = f.readline().split(",")
         
         filelength = len(ids)
-        n_chunks = (filelength // chunk_size) + 1
-        starting_id = current_chunk * n_chunks
+        starting_id = current_chunk * chunk_size
         ending_id = starting_id + chunk_size
         ids = ids[starting_id : min(ending_id, filelength)]
+
+        #raise Exception(f"filelength: {filelength} | n_chunks: {n_chunks} | starting_id: {starting_id} | ending_id: {ending_id} | ids: {ids}")
         
         cursor = self._db.cursor()
 
@@ -221,4 +222,4 @@ class Dataset:
         self._db.close()
 
 data = Dataset("mls")
-data.pull_league_data(300, 1)
+data.pull_league_data(300, 2)
