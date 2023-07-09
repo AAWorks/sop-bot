@@ -150,3 +150,4 @@ class Scraper:
         match_data.append(response["away"]["formation"]) # away formation
 
         return tuple(match_data)
+

@@ -1,14 +1,23 @@
 import utils.scrape
 import sqlite3
 
-class Parser:
-    def __init__(self):
+class Dataset:
+    def __init__(self, league):
         self._db = sqlite3.connect('data/soccer_data.db')
+        self._league_name = league
+        self._create_table(league)
+    
+    @property
+    def table_headers(self):
+        cursor = self._db.cursor()
+        cursor.execute(f"PRAGMA table_info({self._league_name});")
+        data = cursor.fetchall()
+        return data
 
-    def _create_table(self, league):
+    def _create_table(self):
         cursor = self._db.cursor()
         cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS {league}
+            CREATE TABLE IF NOT EXISTS {self._league_name}
                 (match_id INTEGER,
                 epoch_date INTEGER,
                 home_team TEXT,
@@ -59,17 +68,13 @@ class Parser:
         # The prevented goals stat is calculated by subtracting the number of goals a keeper has conceded from the number of goals a keeper would be expected to concede based on the quality of shots he faced.
         self._db.commit()
 
-    def _add_row(self, values, league):
+    def _add_row(self, values):
         if len(values) != 46:
             return
 
         cursor = self._db.cursor()
-        cursor.execute(f"SELECT * FROM {league} WHERE match_id = {values[0]}")
-        existing_match = cursor.fetchall()
-        if existing_match:
-            return
 
-        cursor.execute(f"""INSERT INTO {league} (
+        cursor.execute(f"""INSERT INTO {self._league_name} (
             match_id, 
             epoch_date, 
             home_team, 
@@ -118,7 +123,7 @@ class Parser:
             away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
         self._db.commit()
     
-    def _add_match_data(self, id_file, scraper, chunk_size, current_chunk, league):
+    def _add_match_data(self, id_file, scraper, chunk_size, current_chunk):
         with open(id_file, "r") as f:
             ids = f.readline().split(",")
         
@@ -127,31 +132,30 @@ class Parser:
         starting_id = current_chunk * n_chunks
         ending_id = starting_id + chunk_size
         ids = ids[starting_id : min(ending_id, filelength)]
+        
+        cursor = self._db.cursor()
 
         for id in ids:
-            self._add_row(scraper.get_match_data(int(id)), league)
+            cursor.execute(f"SELECT * FROM {self._league_name} WHERE match_id = {id}")
+            existing_match = cursor.fetchall()
+            if not existing_match:
+                self._add_row(scraper.get_match_data(int(id)))
 
-    def table_headers(self, tablename):
-        cursor = self._db.cursor()
-        cursor.execute(f"PRAGMA table_info({tablename});")
-        data = cursor.fetchall()
-        return data
-
-    def pull_league_data(self, chunk_size, curr, league="mls"):
-        self._create_table(league)
+    def pull_league_data(self, chunk_size, curr):
+        self._create_table(self._league_name)
         scr = utils.scrape.Scraper()
-        self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, league)
+        self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, self._league_name)
 
-    def all_but_last_n_matches(self, league_name: str, agg_depth: int) -> list: # all matches but the last 10
+    def all_but_last_n_matches(self, agg_depth: int) -> list: # all matches but the last 10
         cursor = self._db.cursor()
-        cursor.execute(f"SELECT * from {league_name} ORDER BY epoch_date")
+        cursor.execute(f"SELECT * from {self._league_name} ORDER BY epoch_date")
         data = cursor.fetchall()
         return data[:-agg_depth]
     
-    def _get_last_n_matches_of_team(self, league_name, team_name, rowid, agg_depth):
+    def _get_last_n_matches_of_team(self, team_name, rowid, agg_depth):
         cursor = self._db.cursor()
 
-        cursor.execute(f"SELECT rowid, * from {league_name} WHERE home_team = {team_name} OR away_team = {team_name}")
+        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = {team_name} OR away_team = {team_name}")
         team_matches = cursor.fetchall()
 
         rowid = int(rowid)
@@ -172,11 +176,11 @@ class Parser:
         
         return agg
 
-    def _aggregate_match_data(self, league_name: str, match: dict, agg_depth: int):
+    def _aggregate_match_data(self, match: dict, agg_depth: int):
         rowid = match[0]
 
-        home_matches = self._get_last_n_matches_of_team(self, league_name, match["home_team"], rowid, agg_depth)
-        away_matches = self._get_last_n_matches_of_team(self, league_name, match["away_team"], rowid, agg_depth)
+        home_matches = self._get_last_n_matches_of_team(self, self._leauge_name, match["home_team"], rowid, agg_depth)
+        away_matches = self._get_last_n_matches_of_team(self, self._league_name, match["away_team"], rowid, agg_depth)
         
         for col in match:
             if str(match[col]).isnumeric():
@@ -188,18 +192,21 @@ class Parser:
         return match
     
     def aggregate_data(self, aggregate_depth):
-        aggregated_data, headers = [], self.get_headers("mls")
-        for match in self.all_but_last_n_matches("mls", aggregate_depth):
-            match_dict = dict(zip(headers, aggregate))
-            aggregate = self._aggregate_match_data("mls", match_dict, aggregate_depth)
+        aggregated_data, headers = [], self.table_headers()
+        for match in self.all_but_last_n_matches(aggregate_depth):
+            match_dict = dict(zip(headers, match))
+            aggregate = self._aggregate_match_data(match_dict, aggregate_depth)
             # ^INSIDE -> aggregate_team_stats(team, )
-            aggregated_data.append(match_dict)
+            aggregated_data.append(aggregate)
         
         return aggregated_data
 
+    def normalize(self):
+        return self.aggregate_data(10)
+
     def peek(self):
         cursor = self._db.cursor()
-        cursor.execute("SELECT * FROM mls")
+        cursor.execute(f"SELECT * FROM {self._league_name}")
         data = cursor.fetchall()
         return data
     
