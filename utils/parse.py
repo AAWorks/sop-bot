@@ -147,9 +147,46 @@ class Parser:
         cursor.execute(f"SELECT * from {league_name} ORDER BY epoch_date")
         data = cursor.fetchall()
         return data[:-agg_depth]
+    
+    def _get_last_n_matches_of_team(self, league_name, team_name, rowid, agg_depth):
+        cursor = self._db.cursor()
 
-    def aggregate_match_data(self, match: tuple, agg_depth: int):
-        pass
+        cursor.execute(f"SELECT rowid, * from {league_name} WHERE home_team = {team_name} OR away_team = {team_name}")
+        team_matches = cursor.fetchall()
+
+        rowid = int(rowid)
+        matches = []
+        for match in team_matches:
+            if int(match[0]) in range(rowid + 1, rowid + agg_depth):
+                matches.append(match)
+        
+        return matches
+    
+    def _sum_column(self, to_sum, teamname, key):
+        agg = 0
+        column = key.split("_")[-1]
+
+        for match in to_sum:
+            prefix = "home_" if match[2] == teamname else "away_" # 2: home, 4: away
+            agg += match[prefix + column]
+        
+        return agg
+
+    def aggregate_match_data(self, league_name: str, match: dict, agg_depth: int):
+        rowid = match[0]
+
+        home_matches = self._get_last_n_matches_of_team(self, league_name, match["home_team"], rowid, agg_depth)
+        away_matches = self._get_last_n_matches_of_team(self, league_name, match["away_team"], rowid, agg_depth)
+        
+        for col in match:
+            if str(match[col]).isnumeric():
+                if "home" in col:
+                    match[col] += self._sum_column(home_matches, match["home"], col)
+                elif "away" in col:
+                    match[col] += self._sum_column(away_matches, match["away"], col)
+        
+        return match
+                
 
     def peek(self):
         cursor = self._db.cursor()
