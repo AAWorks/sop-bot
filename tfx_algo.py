@@ -1,33 +1,19 @@
 import tensorflow as tf
 import numpy as np
-import csv
 
 import utils.parse as parse
-import utils.scrape as scrape
 
 TRAINING_SET_FRACTION = 0.90
-
-def get_dataset(data: parse.Parser):
-
-    aggregate_depth = 10
-
-    prepped_data, headers = [], data.get_headers("mls")
-    for match in data.all_but_last_n_matches("mls", aggregate_depth):
-        aggregate = data.aggregate_match_data(match, aggregate_depth)
-        # ^INSIDE -> aggregate_team_stats(team, )
-        prepped_data.append(dict(zip(headers, aggregate)))
-    
-    return prepped_data
 
 
 def main(argv):
     parser = parse.Parser()
-    data = get_dataset(parser)
+    data = parser.aggregate_data(10)
     parser.close_db()
 
-    train_results_len = int(TRAINING_SET_FRACTION * len(data.processed_results))
-    train_results = data.processed_results[:train_results_len]
-    test_results = data.processed_results[train_results_len:]
+    train_results_len = int(TRAINING_SET_FRACTION * len(data))
+    train_results = data[:train_results_len]
+    test_results = data[train_results_len:]
 
     def map_results(results):
         features = {}
@@ -66,15 +52,15 @@ def main(argv):
 
     for mode in ['home', 'away']:
         feature_columns = feature_columns + [
-            tf.feature_column.numeric_column(key='{}-wins'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-draws'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-losses'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-goals'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-opposition-goals'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-shots'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-shots-on-target'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-opposition-shots'.format(mode)),
-            tf.feature_column.numeric_column(key='{}-opposition-shots-on-target'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_score'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_possession'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_shots_on_target'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_totshots'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_big_chances'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_passes'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_clearances'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_goalkeepersaves'.format(mode)),
+            tf.feature_column.numeric_column(key='{}_dribbles'.format(mode)),
         ]
 
     model = tf.estimator.DNNClassifier(
