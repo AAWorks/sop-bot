@@ -1,25 +1,19 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(layout="wide", page_title="SOP Bot", page_icon=":soccer:")
+st.set_page_config(layout="wide", page_title="SOP Bot", page_icon=":gear:")
 st.title('Welcome to SOP Bot :gear:')
-st.caption("A Proprietary Soccer Outcome Prediction Algorithm By Alejandro and Andres Alonso")
+st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)")
 
+st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
 
-predict, userinput = False, False
-accepted_leagues = ["mls"]
-with st.form("league"):
-    league = st.text_input("League").lower().strip().replace(" ", "-")
-    userinput = st.form_submit_button("Enter")
+pred, tfkeras, xgb, data = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "XGBoost Model :evergreen_tree:", "View Dataset :page_facing_up:"])
 
-if league:
-    if not(league in accepted_leagues):
-        st.error('League not registered', icon="🚨")
-    else:
-        with st.form("teams"):
-            home = st.text_input("Team 1")
-            away = st.text_input('Team 2')
-            predict = st.form_submit_button("Get Prediction")
-
-        if home and away:
-            st.success("working")
+with pred:
+    st.info("Select a League and Upcoming Match to Predict")
+with tfkeras:
+    st.info("Tensorflow-keras Deep Neural Network Model")
+with xgb:
+    st.info("XGBoost Gradient Boosted Decision Tree")
+with data:
+    st.info("Raw, Aggregated, and Normalized Datasets")
