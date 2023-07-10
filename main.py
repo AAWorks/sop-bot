@@ -9,12 +9,13 @@ st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)
 
 st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
 
-#@st.cache_data
+@st.cache_data
 def gen_data():
     raw = Dataset("mls")
     vis_raw = raw.peek()
     vis_aggregate = raw.aggregate_data(10)
-    return vis_raw, vis_aggregate
+    vis_norm = raw.normalize()
+    return vis_raw, vis_aggregate, vis_norm
 
 pred, tfkeras, xgb, data = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "XGBoost Model :evergreen_tree:", "View Dataset :page_facing_up:"])
 
@@ -26,6 +27,8 @@ with xgb:
     st.info("XGBoost Gradient Boosted Decision Tree")
 with data:
     st.info("Raw, Aggregated, and Normalized Datasets")
-    r, a = gen_data()
+    r, a, n = gen_data()
+    st.subheader("--in prod--")
     st.dataframe(r)
     st.dataframe(a)
+    st.dataframe(n)
