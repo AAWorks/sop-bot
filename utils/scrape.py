@@ -144,10 +144,5 @@ class Scraper:
                 match_data.append(0)
                 match_data.append(0)
 
-        url = f"https://footapi7.p.rapidapi.com/api/match/{match_id}/lineups"
-        response = requests.get(url, headers=self._footapi._headers).json()
-        match_data.append(response["home"]["formation"]) # home formation
-        match_data.append(response["away"]["formation"]) # away formation
-
         return tuple(match_data)
 
