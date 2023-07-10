@@ -1,4 +1,4 @@
-import utils.scrape
+import scrape
 import sqlite3
 
 class Dataset:
@@ -6,6 +6,7 @@ class Dataset:
         self._db = sqlite3.connect('data/soccer_data.db')
         self._league_name = league
         self._create_table()
+        self._scr = scrape.Scraper()
     
     @property
     def table_headers(self):
@@ -64,15 +65,13 @@ class Dataset:
                 home_interceptions INTEGER,
                 away_interceptions INTEGER,
                 home_clearances INTEGER,
-                away_clearances INTEGER,
-                home_formation TEXT,
-                away_formation TEXT)
+                away_clearances INTEGER)
         ''')
         # The prevented goals stat is calculated by subtracting the number of goals a keeper has conceded from the number of goals a keeper would be expected to concede based on the quality of shots he faced.
         self._db.commit()
 
     def _add_row(self, values):
-        if len(values) != 46:
+        if len(values) != 44:
             return
 
         cursor = self._db.cursor()
@@ -121,9 +120,7 @@ class Dataset:
             home_interceptions, 
             away_interceptions, 
             home_clearances, 
-            away_clearances, 
-            home_formation, 
-            away_formation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
+            away_clearances) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
         self._db.commit()
     
     def _add_match_data(self, id_file, scraper, chunk_size, current_chunk):
@@ -131,10 +128,11 @@ class Dataset:
             ids = f.readline().split(",")
         
         filelength = len(ids)
-        n_chunks = (filelength // chunk_size) + 1
-        starting_id = current_chunk * n_chunks
+        starting_id = current_chunk * chunk_size
         ending_id = starting_id + chunk_size
         ids = ids[starting_id : min(ending_id, filelength)]
+
+        #raise Exception(f"filelength: {filelength} | n_chunks: {n_chunks} | starting_id: {starting_id} | ending_id: {ending_id} | ids: {ids}")
         
         cursor = self._db.cursor()
 
@@ -145,9 +143,7 @@ class Dataset:
                 self._add_row(scraper.get_match_data(int(id)))
 
     def pull_league_data(self, chunk_size, curr):
-        self._create_table(self._league_name)
-        scr = utils.scrape.Scraper()
-        self.add_match_data("data/mls_match_ids.txt", scr, chunk_size, curr, self._league_name)
+        self._add_match_data("data/mls_match_ids.txt", self._scr, chunk_size, curr)
 
     def all_matches(self) -> list: # all matches but the last 10
         cursor = self._db.cursor()
@@ -222,4 +218,21 @@ class Dataset:
         self._db.close()
 
 data = Dataset("mls")
-data.pull_league_data(300, 0)
+i = 0
+repeated_errors = 0
+while i < 11 and repeated_errors < 3:
+    try:
+        print(f"***DIAG: Pull {i} Initiated***")
+        data.pull_league_data(300, i)
+        print(f"***DIAG: Pull {i} Completed***")
+        i += 1
+        repeated_errors = 0
+    except(KeyboardInterrupt):
+        raise Exception("Process Terminated")
+    except(Exception) as e:
+        print(f"***DIAG: Threw Error - Pull #{i} Restarted***")
+        print(f"***DIAG: Error Thrown - {e}***")
+        repeated_errors += 1
+
+if repeated_errors == 3:
+    print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
