@@ -1,5 +1,6 @@
 import scrape
 import sqlite3
+import pandas as pd
 
 class Dataset:
     def __init__(self, league):
@@ -145,11 +146,19 @@ class Dataset:
     def pull_league_data(self, chunk_size, curr):
         self._add_match_data("data/mls_match_ids.txt", self._scr, chunk_size, curr)
 
-    def all_matches(self) -> list: # all matches but the last 10
+    def all_matches_w_results(self) -> list: # all matches in dict form
         cursor = self._db.cursor()
         cursor.execute(f"SELECT rowid, * from {self._league_name} ORDER BY epoch_date")
         data = cursor.fetchall()
-        return data
+
+        def get_result(home, away):
+            if home > away: return "W"
+            elif home == away: return "T"
+            else: return "L"
+        
+        for row in data:
+            match = dict(zip(["rowid"] + self.table_headers, row))
+            match["result"] = get_result(match["home_score"], match["away_score"])
     
     def _get_last_n_matches_of_team(self, team_name, rowid, agg_depth):
         cursor = self._db.cursor()
@@ -165,13 +174,16 @@ class Dataset:
         
         return [dict(zip(["rowid"] + self.table_headers, match)) for match in team_matches]
     
-    def _sum_column(self, to_sum, teamname, key):
+    def _sum_column(self, to_sum, teamname, key, dp=None):
         agg = 0
         column = key.split("_")[-1]
 
         for match in to_sum:
-            prefix = "home_" if match["home_team"] == teamname else "away_" # 2: home, 4: away
-            agg += match[prefix + column]
+            if key == "result" and dp:
+                agg += 1 if match[key] == dp else 0
+            else:
+                prefix = "home_" if match["home_team"] == teamname else "away_" # 2: home, 4: away
+                agg += match[prefix + column]
         
         return agg
 
@@ -184,29 +196,48 @@ class Dataset:
 
         if not home_matches or not away_matches:
             return []
-        
+
+        new_match = {}
+
         for col in match:
-            if str(match[col]).isnumeric():
+            # if col in ("match_id", "epoch_date"):
+            #     new_match[col] = match[col]
+            if str(match[col]).isnumeric() and not col in ("match_id", "epoch_date"):
                 if "home" in col:
-                    match[col] += self._sum_column(home_matches, home, col)
+                    new_match[col] += self._sum_column(home_matches, home, col)
                 elif "away" in col:
-                    match[col] += self._sum_column(away_matches, away, col)
+                    new_match[col] += self._sum_column(away_matches, away, col)
+            elif match[col] == "result":
+                for mode in ("wins", "ties"," losses"):
+                    dp = mode[0].upper()
+                    new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, dp)
+                    new_match[f"away_{mode}"] = self._sum_column(home_matches, away, col, dp)
         
-        return match
-    
+        return new_match
+
     def aggregate_data(self, aggregate_depth):
         aggregated_data, headers = [], ["rowid"] + self.table_headers
-        for match in self.all_matches():
-            match_dict = dict(zip(headers, match))
-            aggregate = self._aggregate_match_data(match_dict, aggregate_depth)
+        for match in self.all_matches_w_results():
+            aggregate = self._aggregate_match_data(match, aggregate_depth)
             # ^INSIDE -> aggregate_team_stats(team, )
             if aggregate:
                 aggregated_data.append(aggregate)
         
         return aggregated_data
 
-    def normalize(self):
-        return self.aggregate_data(10)
+    def _normalise_column(series):
+        return (series - series.min())/(series.max() - series.min())
+
+    def normalize_aggregate(self, aggregated_data=None):
+        if not aggregated_data:
+            data = self.aggregate_data(10)
+        
+        df = pd.Dataframe.from_dict(data).drop("rowid", axis=1)
+
+        for col in data.columns:
+            df[col] = self._normalize_column(df[col])
+
+        return df
 
     def peek(self):
         cursor = self._db.cursor()
