@@ -1,4 +1,4 @@
-import scrape
+import utils.scrape as scrape
 import sqlite3
 import pandas as pd
 
@@ -145,26 +145,34 @@ class Dataset:
 
     def pull_league_data(self, chunk_size, curr):
         self._add_match_data("data/mls_match_ids.txt", self._scr, chunk_size, curr)
-
-    def all_matches_w_results(self) -> list: # all matches in dict form
-        cursor = self._db.cursor()
-        cursor.execute(f"SELECT rowid, * from {self._league_name} ORDER BY epoch_date")
-        data = cursor.fetchall()
-
+    
+    def _parse_w_result(self, data):
         def get_result(home, away):
             if home > away: return "W"
             elif home == away: return "T"
             else: return "L"
         
+        matches = []
+
         for row in data:
             match = dict(zip(["rowid"] + self.table_headers, row))
-            match["result"] = get_result(match["home_score"], match["away_score"])
+            match["result"] = get_result(int(match["home_score"]), int(match["away_score"]))
+            matches.append(match)
+        
+        return matches
+
+    def all_matches_w_results(self) -> list: # all matches in dict form
+        cursor = self._db.cursor()
+        cursor.execute(f"SELECT rowid, * from {self._league_name} ORDER BY epoch_date")
+        data = cursor.fetchall()
+        
+        return self._parse_w_result(data)
     
     def _get_last_n_matches_of_team(self, team_name, rowid, agg_depth):
         cursor = self._db.cursor()
         rowid = int(rowid)
 
-        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND rowid > {rowid} ORDER BY epoch_date")
+        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND rowid >= {rowid} ORDER BY epoch_date")
         team_matches = cursor.fetchall()
 
         if len(team_matches) >= agg_depth:
@@ -172,7 +180,7 @@ class Dataset:
         else:
             return []
         
-        return [dict(zip(["rowid"] + self.table_headers, match)) for match in team_matches]
+        return self._parse_w_result(team_matches)
     
     def _sum_column(self, to_sum, teamname, key, dp=None):
         agg = 0
@@ -202,41 +210,65 @@ class Dataset:
         for col in match:
             # if col in ("match_id", "epoch_date"):
             #     new_match[col] = match[col]
-            if str(match[col]).isnumeric() and not col in ("match_id", "epoch_date"):
+            if str(match[col]).isnumeric() and not col in ("match_id", "epoch_date", "result"):
                 if "home" in col:
-                    new_match[col] += self._sum_column(home_matches, home, col)
+                    new_match[col] = self._sum_column(home_matches, home, col)
                 elif "away" in col:
-                    new_match[col] += self._sum_column(away_matches, away, col)
-            elif match[col] == "result":
+                    new_match[col] = self._sum_column(away_matches, away, col)
+            if col == "result":
+                new_match[col] = {"W": 1, "L": 0, "T": 2}.get(match[col])
                 for mode in ("wins", "ties"," losses"):
                     dp = mode[0].upper()
                     new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, dp)
-                    new_match[f"away_{mode}"] = self._sum_column(home_matches, away, col, dp)
+                    new_match[f"away_{mode}"] = self._sum_column(away_matches, away, col, dp)
         
         return new_match
 
-    def aggregate_data(self, aggregate_depth):
-        aggregated_data, headers = [], ["rowid"] + self.table_headers
-        for match in self.all_matches_w_results():
+    def aggregate_data(self, aggregate_depth, progress_bar=None):
+        aggregated_data = []
+        percent_complete = 0
+
+        matches = self.all_matches_w_results()
+        lenmatches = len(matches)
+        inc = 1 / lenmatches
+
+        for match in matches:
             aggregate = self._aggregate_match_data(match, aggregate_depth)
-            # ^INSIDE -> aggregate_team_stats(team, )
             if aggregate:
                 aggregated_data.append(aggregate)
+            if progress_bar:
+                percent_complete = min(percent_complete + inc, 1.0)
+                progress_bar.progress(percent_complete, text=f"Aggregating Data ({int(percent_complete * 100)}% Complete)")
+        
+        if progress_bar:
+            progress_bar.progress(1.0, text="Aggregated Match Data")
         
         return aggregated_data
 
-    def _normalise_column(series):
+    def _normalize_column(self, series):
         return (series - series.min())/(series.max() - series.min())
 
-    def normalize_aggregate(self, aggregated_data=None):
-        if not aggregated_data:
+    def normalize_aggregate(self, data=None, progress_bar=None):
+        if not data:
             data = self.aggregate_data(10)
         
-        df = pd.Dataframe.from_dict(data).drop("rowid", axis=1)
+        df = pd.DataFrame.from_dict(data)
+        cols = df.columns
 
-        for col in data.columns:
-            df[col] = self._normalize_column(df[col])
+        lencols, percent_complete = len(cols), 0
+        inc = 1 / lencols
 
+        for col in cols:
+            if col != "result":
+                df[col] = self._normalize_column(df[col])
+
+            if progress_bar:
+                percent_complete = min(percent_complete + inc, 1.0)
+                progress_bar.progress(percent_complete, text=f"Normalizing Data ({int(percent_complete * 100)}% Complete)")
+
+        if progress_bar:
+            progress_bar.progress(1.0, text="Normalized Match Data")
+        
         return df
 
     def peek(self):
@@ -248,22 +280,23 @@ class Dataset:
     def close_db(self):
         self._db.close()
 
-data = Dataset("mls")
-i = 0
-repeated_errors = 0
-while i < 11 and repeated_errors < 3:
-    try:
-        print(f"***DIAG: Pull {i} Initiated***")
-        data.pull_league_data(300, i)
-        print(f"***DIAG: Pull {i} Completed***")
-        i += 1
-        repeated_errors = 0
-    except(KeyboardInterrupt):
-        raise Exception("Process Terminated")
-    except(Exception) as e:
-        print(f"***DIAG: Threw Error - Pull #{i} Restarted***")
-        print(f"***DIAG: Error Thrown - {e}***")
-        repeated_errors += 1
+def run_pull():
+    data = Dataset("mls")
+    i = 0
+    repeated_errors = 0
+    while i < 11 and repeated_errors < 3:
+        try:
+            print(f"***DIAG: Pull {i} Initiated***")
+            data.pull_league_data(300, i)
+            print(f"***DIAG: Pull {i} Completed***")
+            i += 1
+            repeated_errors = 0
+        except(KeyboardInterrupt):
+            raise Exception("Process Terminated")
+        except(Exception) as e:
+            print(f"***DIAG: Threw Error - Pull #{i} Restarted***")
+            print(f"***DIAG: Error Thrown - {e}***")
+            repeated_errors += 1
 
-if repeated_errors == 3:
-    print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
+    if repeated_errors == 3:
+        print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
