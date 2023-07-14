@@ -37,7 +37,7 @@ class DNNModel:
         self._model.add(tf.keras.layers.Dense(units=self._init_layer * 3, activation='relu'))
         self._model.add(tf.keras.layers.Dense(units=1, activation='relu'))
         opt = tf.keras.optimizers.Adam(learning_rate=1e-7)
-        self._model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['acc'])
+        self._model.compile(loss=keras.losses.SparseCategoricalCrossentropy(), optimizer=opt, metrics=['acc'])
 
     def train(self):
         self._hist_obj = self._model.fit(self._train['data'], self._train['labels'], verbose=False, epochs=500)
