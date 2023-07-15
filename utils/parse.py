@@ -216,7 +216,7 @@ class Dataset:
                 elif "away" in col:
                     new_match[col] = self._sum_column(away_matches, away, col)
             if col == "result":
-                new_match[col] = {"W": 1, "L": 0, "T": 2}.get(match[col])
+                new_match[col] = {"W": 0, "L": 1, "T": 1}.get(match[col])
                 for mode in ("wins", "ties"," losses"):
                     dp = mode[0].upper()
                     new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, dp)
@@ -238,12 +238,15 @@ class Dataset:
                 aggregated_data.append(aggregate)
             if progress_bar:
                 percent_complete = min(percent_complete + inc, 1.0)
-                progress_bar.progress(percent_complete, text=f"Aggregating Data ({int(percent_complete * 100)}% Complete)")
+                progress_bar.progress(percent_complete, text=f"Processing Match Data ({int(percent_complete * 100)}% Complete)")
         
         if progress_bar:
-            progress_bar.progress(1.0, text="Aggregated Match Data")
+            progress_bar.progress(1.0, text="Processed Match Data")
         
         return aggregated_data
+    
+    def to_df(self, data):
+        return pd.DataFrame.from_dict(data)
 
     def _normalize_column(self, series):
         return (series - series.min())/(series.max() - series.min())
@@ -265,6 +268,8 @@ class Dataset:
             if progress_bar:
                 percent_complete = min(percent_complete + inc, 1.0)
                 progress_bar.progress(percent_complete, text=f"Normalizing Data ({int(percent_complete * 100)}% Complete)")
+
+        df = df[::-1]
 
         if progress_bar:
             progress_bar.progress(1.0, text="Normalized Match Data")

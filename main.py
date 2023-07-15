@@ -14,13 +14,12 @@ def get_and_parse():
     raw = Dataset("mls")
     vis_raw = raw.peek()
 
-    agg_txt = "Aggregating Data (0% Complete)"
+    agg_txt = "Processing Match Data (0% Complete)"
     agg_bar = st.progress(0, text=agg_txt)
-    vis_aggregate = raw.aggregate_data(10, agg_bar)
+    agg = raw.aggregate_data(10, agg_bar)
+    vis_aggregate = raw.to_df(agg)
 
-    norm_txt = "Normalizing Data (0% Complete)"
-    norm_bar = st.progress(0, text=norm_txt)
-    vis_norm = raw.normalize_aggregate(vis_aggregate, norm_bar)
+    vis_norm = raw.normalize_aggregate(agg)
     return vis_raw, vis_aggregate, vis_norm
 
 raw, agg, norm = get_and_parse()
