@@ -168,11 +168,11 @@ class Dataset:
         
         return self._parse_w_result(data)
     
-    def _get_last_n_matches_of_team(self, team_name, rowid, agg_depth):
+    def _get_last_n_matches_of_team(self, team_name, epoch_date, agg_depth):
         cursor = self._db.cursor()
-        rowid = int(rowid)
+        epoch_date = int(epoch_date)
 
-        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND rowid >= {rowid} ORDER BY epoch_date")
+        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND rowid > {epoch_date} ORDER BY epoch_date")
         team_matches = cursor.fetchall()
 
         if len(team_matches) >= agg_depth:
@@ -196,11 +196,11 @@ class Dataset:
         return agg
 
     def _aggregate_match_data(self, match: dict, agg_depth: int):
-        rowid = match["rowid"]
+        date = match["epoch_date"]
         home, away = match["home_team"], match["away_team"]
 
-        home_matches = self._get_last_n_matches_of_team(home, rowid, agg_depth)
-        away_matches = self._get_last_n_matches_of_team(away, rowid, agg_depth)
+        home_matches = self._get_last_n_matches_of_team(home, date, agg_depth)
+        away_matches = self._get_last_n_matches_of_team(away, date, agg_depth)
 
         if not home_matches or not away_matches:
             return []
@@ -216,7 +216,7 @@ class Dataset:
                 elif "away" in col:
                     new_match[col] = self._sum_column(away_matches, away, col)
             if col == "result":
-                new_match[col] = {"W": 0, "L": 1, "T": 1}.get(match[col])
+                new_match[col] = {"W": 1, "L": 0, "T": 0}.get(match[col])
                 for mode in ("wins", "ties"," losses"):
                     dp = mode[0].upper()
                     new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, dp)

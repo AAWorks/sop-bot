@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras # pylance raises <Import "tensorflow.keras" could not be resolved> - Ignore
-from sklearn import preprocessing
+#from sklearn import preprocessing
 
 
 class DNNModel:
@@ -44,7 +44,8 @@ class DNNModel:
         # standardized_train = preprocessing.scale(self._train["data"])
         # standardized_test = preprocessing.scale(self._test["data"])
         # self._hist_obj = self._model.fit(standardized_train, self._train['labels'], validation_data=(standardized_test, self._test['labels']), verbose=False, epochs=100, batch_size=256)
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(self._test["data"], self._test['labels']), verbose=False, epochs=100, batch_size=256)
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.20, verbose=1, epochs=100, batch_size=256)
+        # self._test["data"], self._test['labels']
     
     def train_analytics(self):
         if self._hist_obj:
