@@ -217,7 +217,7 @@ class Dataset:
                     new_match[col] = self._sum_column(away_matches, away, col)
             if col == "result":
                 new_match[col] = {"W": 1, "L": 0, "T": 0}.get(match[col])
-                for mode in ("wins", "ties"," losses"):
+                for mode in ("wins", "ties","losses"):
                     dp = mode[0].upper()
                     new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, dp)
                     new_match[f"away_{mode}"] = self._sum_column(away_matches, away, col, dp)

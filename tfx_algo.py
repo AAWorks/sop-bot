@@ -51,4 +51,7 @@ class DNNModel:
         if self._hist_obj:
             return self._hist_obj.history
         return None
-
+    
+    def evaluate(self):
+        eval = self._model.evaluate(self._test["data"], self._test['labels'], verbose=1, return_dict=True, batch_size=200)     
+        return eval

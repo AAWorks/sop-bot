@@ -41,6 +41,8 @@ with pred:
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
     history = tf_model.train_analytics()
+    stats = tf_model.evaluate()
+    st.write(stats)
     st.line_chart(history['acc'])
 with xgb:
     st.info("XGBoost Gradient Boosted Decision Tree")
