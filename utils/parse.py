@@ -182,24 +182,31 @@ class Dataset:
         
         return self._parse_w_result(team_matches)
     
-    def _sum_column(self, to_sum, teamname, key, team, dp=None):
+    def _get_win_val(self, match, prefix):
+        if prefix == "home":
+            return 1 if match["result"] == "W" else 0
+        return 1 if match["result"] == "L" else 0
+
+    def _get_loss_val(self, match, prefix):
+        if prefix == "home":
+            return 1 if match["result"] == "L" else 0
+        return 1 if match["result"] == "W" else 0
+    
+    def _sum_column(self, to_sum, teamname, key, mode=None):
         agg = 0
         column = key.split("_")[-1]
 
         for match in to_sum:
-            if key == "result" and dp:
-                if match[key] == dp:
-                    if dp == "T" :
-                        agg = 1
-                    elif team == "home" and dp == "W":
-                        agg = 1
-                    elif team == "away" and dp == "L":
-                        agg = 1
-                    else:
-                        agg = 0
-            else:
-                prefix = "home_" if match["home_team"] == teamname else "away_" # 2: home, 4: away
-                agg += match[prefix + column]
+            prefix = "home" if match["home_team"] == teamname else "away" # 2: home, 4: away
+            if key != "result":
+                agg += match[f"{prefix}_{column}"]
+            elif mode:
+                if mode == "wins":
+                    agg += self._get_win_val(match, prefix)
+                elif mode == "losses":
+                    agg += self._get_loss_val(match, prefix)
+                else:
+                    agg += 1 if match["result"] == "T" else 0
         
         return agg
 
@@ -226,9 +233,8 @@ class Dataset:
             if col == "result":
                 new_match[col] = {"W": 1, "L": 0, "T": 0}.get(match[col])
                 for mode in ("wins", "ties","losses"):
-                    dp = mode[0].upper()
-                    new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, dp)
-                    new_match[f"away_{mode}"] = self._sum_column(away_matches, away, col, dp)
+                    new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, mode)
+                    new_match[f"away_{mode}"] = self._sum_column(away_matches, away, col, mode)
         
         return new_match
 
@@ -247,9 +253,6 @@ class Dataset:
             if progress_bar:
                 percent_complete = min(percent_complete + inc, 1.0)
                 progress_bar.progress(percent_complete, text=f"Processing Match Data ({int(percent_complete * 100)}% Complete)")
-        
-        if progress_bar:
-            progress_bar.progress(1.0, text="Processed Match Data")
         
         return aggregated_data
     
@@ -283,6 +286,11 @@ class Dataset:
             progress_bar.progress(1.0, text="Normalized Match Data")
         
         return df
+
+    def drop_columns(self, data, columns):
+        columns = [f"home_{col}" for col in columns] + [f"away_{col}" for col in columns]
+
+        return data.drop(columns, axis=1)
 
     def peek(self):
         cursor = self._db.cursor()

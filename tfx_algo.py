@@ -33,18 +33,18 @@ class DNNModel:
     
     def build(self):
         self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
-        self._model.add(tf.keras.layers.Dense(units=100, activation='relu'))
-        self._model.add(tf.keras.layers.Dense(units=1000, activation='relu'))
+        #self._model.add(tf.keras.layers.Dense(units=100, activation='relu'))
+        self._model.add(tf.keras.layers.Dense(units=self._init_layer * 2 / 3, activation='relu'))
         #self._model.add(tf.keras.layers.Dense(units=self._init_layer * 3, activation='relu'))
         self._model.add(tf.keras.layers.Dense(units=1, activation='softmax'))
-        opt = tf.keras.optimizers.Adam(learning_rate=1e-7) #
+        opt = tf.keras.optimizers.Adam(learning_rate=0.001) #learning_rate=1e-7
         self._model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['acc'])
 
     def train(self):
         # standardized_train = preprocessing.scale(self._train["data"])
         # standardized_test = preprocessing.scale(self._test["data"])
         # self._hist_obj = self._model.fit(standardized_train, self._train['labels'], validation_data=(standardized_test, self._test['labels']), verbose=False, epochs=100, batch_size=256)
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.20, verbose=1, epochs=100, batch_size=256)
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.20, verbose=1, epochs=100, batch_size=512)
         # self._test["data"], self._test['labels']
     
     def train_analytics(self):

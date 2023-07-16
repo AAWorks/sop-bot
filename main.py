@@ -9,24 +9,26 @@ st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)
 
 st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
 
-@st.cache_data
+#@st.cache_data
 def get_and_parse():
-    raw = Dataset("mls")
-    vis_raw = raw.peek()
+    data = Dataset("mls")
+    vis_raw = data.peek()
 
     agg_txt = "Processing Match Data (0% Complete)"
     agg_bar = st.progress(0, text=agg_txt)
-    agg = raw.aggregate_data(10, agg_bar)
-    vis_aggregate = raw.to_df(agg)
+    vis_aggregate = data.aggregate_data(10, agg_bar)
+    agg_bar.progress(1.0, text="Done")
 
-    vis_norm = raw.normalize_aggregate(agg)
-    return vis_raw, vis_aggregate, vis_norm
+    vis_norm = data.normalize_aggregate(vis_aggregate)
 
-raw, agg, norm = get_and_parse()
+    train_data = data.drop_columns(vis_norm, ["shotsinsidebox", "cornerkicks", "offsides", "yellowcards", "redcards", "interceptions"])
+    return vis_raw, vis_aggregate, vis_norm, train_data
 
-@st.cache_resource
+raw, agg, norm, records = get_and_parse()
+
+#@st.cache_resource
 def get_tf_model():
-    model = DNNModel(norm)
+    model = DNNModel(records)
     model.build()
     model.train()
 
@@ -43,6 +45,7 @@ with tfkeras:
     history = tf_model.train_analytics()
     stats = tf_model.evaluate()
     st.write(stats)
+    st.line_chart(history['loss'])
     st.line_chart(history['acc'])
 with xgb:
     st.info("XGBoost Gradient Boosted Decision Tree")
