@@ -149,8 +149,8 @@ class Dataset:
     def _parse_w_result(self, data):
         def get_result(home, away):
             if home > away: return "W"
-            elif home == away: return "T"
-            else: return "L"
+            elif home < away: return "L"
+            else: return "T"
         
         matches = []
 
@@ -182,13 +182,21 @@ class Dataset:
         
         return self._parse_w_result(team_matches)
     
-    def _sum_column(self, to_sum, teamname, key, dp=None):
+    def _sum_column(self, to_sum, teamname, key, team, dp=None):
         agg = 0
         column = key.split("_")[-1]
 
         for match in to_sum:
             if key == "result" and dp:
-                agg += 1 if match[key] == dp else 0
+                if match[key] == dp:
+                    if dp == "T" :
+                        agg = 1
+                    elif team == "home" and dp == "W":
+                        agg = 1
+                    elif team == "away" and dp == "L":
+                        agg = 1
+                    else:
+                        agg = 0
             else:
                 prefix = "home_" if match["home_team"] == teamname else "away_" # 2: home, 4: away
                 agg += match[prefix + column]
