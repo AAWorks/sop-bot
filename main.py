@@ -55,10 +55,13 @@ with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
     history = tf_model.train_analytics()
     stats = tf_model.evaluate()
+    st.write("Eval on Test")
     st.write(stats)
+    st.write("Training Eval")
     st.line_chart(history['loss'])
     st.line_chart(history['accuracy'])
     prediction = tf_model.get_test_predictions()
+    st.write("Test Preds")
     st.write(prediction)
 with xgb:
     st.info("XGBoost Gradient Boosted Decision Tree")

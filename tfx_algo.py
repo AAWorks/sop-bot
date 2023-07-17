@@ -4,7 +4,7 @@ import tensorflow.keras as keras # pylance raises <Import "tensorflow.keras" cou
 
 class DNNModel:
     def __init__(self, records):
-        training_set_frac = 0.80
+        training_set_frac = 0.90
 
         features = list(records.columns)
         features.remove("result")
@@ -32,16 +32,17 @@ class DNNModel:
     def build(self):
         self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
         #self._model.add(tf.keras.layers.Dense(units=100, activation='relu'))
-        #self._model.add(tf.keras.layers.Dropout(0.4))
-        self._model.add(tf.keras.layers.Dense(units=64, activation='relu'))
-        #self._model.add(tf.keras.layers.Dropout(0.4))
-        #self._model.add(tf.keras.layers.Dense(units=self._init_layer * 3, activation='relu'))
+        self._model.add(tf.keras.layers.Dropout(0.8))
+        self._model.add(tf.keras.layers.Dense(units=self._init_layer * 2 // 3, activation='relu'))
+        self._model.add(tf.keras.layers.Dropout(0.6))
+        self._model.add(tf.keras.layers.Dense(units=self._init_layer // 2, activation='relu'))
+        self._model.add(tf.keras.layers.Dropout(0.5))
         self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))#, activation='relu'))
         opt = tf.keras.optimizers.Adam(learning_rate=0.001) #learning_rate=1e-7
-        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), optimizer=opt, metrics=['accuracy'])
+        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=opt, metrics=['accuracy']) # from_logits?
 
     def train(self):
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.20, verbose=1, epochs=500, batch_size=128, shuffle=True)
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.15, verbose=1, epochs=500, batch_size=128, shuffle=True)
         # self._test["data"], self._test['labels']
     
     def train_analytics(self):
