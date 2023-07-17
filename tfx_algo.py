@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras # pylance raises <Import "tensorflow.keras" could not be resolved> - Ignore
 #from sklearn import preprocessing
+import streamlit as st
 
 
 class DNNModel:
@@ -34,17 +35,19 @@ class DNNModel:
     def build(self):
         self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
         #self._model.add(tf.keras.layers.Dense(units=100, activation='relu'))
-        self._model.add(tf.keras.layers.Dense(units=self._init_layer * 2 / 3, activation='relu'))
+        #self._model.add(tf.keras.layers.Dropout(0.4))
+        self._model.add(tf.keras.layers.Dense(units=64, activation='relu'))
+        #self._model.add(tf.keras.layers.Dropout(0.4))
         #self._model.add(tf.keras.layers.Dense(units=self._init_layer * 3, activation='relu'))
-        self._model.add(tf.keras.layers.Dense(units=1, activation='softmax'))
+        self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))#, activation='relu'))
         opt = tf.keras.optimizers.Adam(learning_rate=0.001) #learning_rate=1e-7
-        self._model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['acc'])
+        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), optimizer=opt, metrics=['accuracy'])
 
     def train(self):
         # standardized_train = preprocessing.scale(self._train["data"])
         # standardized_test = preprocessing.scale(self._test["data"])
         # self._hist_obj = self._model.fit(standardized_train, self._train['labels'], validation_data=(standardized_test, self._test['labels']), verbose=False, epochs=100, batch_size=256)
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.20, verbose=1, epochs=100, batch_size=512)
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_split=0.20, verbose=1, epochs=100, batch_size=128, shuffle=True)
         # self._test["data"], self._test['labels']
     
     def train_analytics(self):
@@ -53,5 +56,10 @@ class DNNModel:
         return None
     
     def evaluate(self):
-        eval = self._model.evaluate(self._test["data"], self._test['labels'], verbose=1, return_dict=True, batch_size=200)     
+        eval = self._model.evaluate(self._test["data"], self._test['labels'], verbose=1, return_dict=True, batch_size=64)     
+        return eval
+    
+    def get_test_predictions(self):
+        eval = self._model.predict(self._test["data"], verbose=1, batch_size=64)
+        
         return eval

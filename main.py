@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 from utils.parse import Dataset
 from tfx_algo import DNNModel
@@ -9,7 +10,7 @@ st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)
 
 st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
 
-#@st.cache_data
+@st.cache_data
 def get_and_parse():
     data = Dataset("mls")
     vis_raw = data.peek()
@@ -21,16 +22,33 @@ def get_and_parse():
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
-    train_data = data.drop_columns(vis_norm, ["shotsinsidebox", "cornerkicks", "offsides", "yellowcards", "redcards", "interceptions"])
+    train_data = data.drop_columns(vis_norm, ["possession", "shotsontarget", "totshots", "bigchances", "shotsinsidebox", "goalkeepersaves", "cornerkicks", "offsides", "fouls", "yellowcards", "redcards", "passes", "accuratepasses", "longballs", "crosses", "dribbles", "tackles", "interceptions", "clearances"])
     return vis_raw, vis_aggregate, vis_norm, train_data
 
 raw, agg, norm, records = get_and_parse()
 
 #@st.cache_resource
-def get_tf_model():
-    model = DNNModel(records)
+def get_tf_model(): 
+    a, b, c = records.loc[records['result'] == 0], records.loc[records['result'] == 1], records.loc[records['result'] == 2]
+    # st.write(a.shape[0])
+    # st.write(b.shape[0])
+    # st.write(c.shape[0])
+    b = b.head(500).reset_index()
+    a = a.head(500).reset_index()
+    c = c.head(500).reset_index()
+    tmp = pd.concat([a, b]).sort_index(kind='merge')
+    tmp = tmp.drop("index", axis=1).drop("home_score", axis=1).drop("away_score", axis=1).drop("home_ties", axis=1).drop("away_ties", axis=1).drop("home_losses", axis=1).drop("away_losses", axis=1)
+    st.write(tmp)
+    model = DNNModel(tmp)
     model.build()
     model.train()
+    history = model.train_analytics()
+    stats = model.evaluate()
+    st.write(stats)
+    st.line_chart(history['loss'])
+    st.line_chart(history['accuracy'])
+    prediction = model.get_test_predictions()
+    st.write(prediction)
 
     return model
 
@@ -42,11 +60,13 @@ with pred:
     st.info("Select a League and Upcoming Match to Predict")
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
-    history = tf_model.train_analytics()
-    stats = tf_model.evaluate()
-    st.write(stats)
-    st.line_chart(history['loss'])
-    st.line_chart(history['acc'])
+    # history = tf_model.train_analytics()
+    # stats = tf_model.evaluate()
+    # st.write(stats)
+    # st.line_chart(history['loss'])
+    # st.line_chart(history['acc'])
+    # prediction = tf_model.get_test_predictions()
+    # st.write(prediction)
 with xgb:
     st.info("XGBoost Gradient Boosted Decision Tree")
 with data:

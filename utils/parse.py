@@ -231,7 +231,7 @@ class Dataset:
                 elif "away" in col:
                     new_match[col] = self._sum_column(away_matches, away, col)
             if col == "result":
-                new_match[col] = {"W": 1, "L": 0, "T": 0}.get(match[col])
+                new_match[col] = {"W": 1, "L": 0, "T": 2}.get(match[col])
                 for mode in ("wins", "ties","losses"):
                     new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, mode)
                     new_match[f"away_{mode}"] = self._sum_column(away_matches, away, col, mode)
@@ -284,6 +284,13 @@ class Dataset:
 
         if progress_bar:
             progress_bar.progress(1.0, text="Normalized Match Data")
+
+        df = df.drop("home_wins", axis=1).drop("away_wins", axis=1)
+        df["home_wins"] = df["result"]
+        df["away_wins"] = df["result"]
+
+        for i in range(100):
+            df["away_wins" + str(i)] = df["result"]
         
         return df
 
