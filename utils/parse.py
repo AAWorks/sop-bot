@@ -285,19 +285,41 @@ class Dataset:
         if progress_bar:
             progress_bar.progress(1.0, text="Normalized Match Data")
 
-        df = df.drop("home_wins", axis=1).drop("away_wins", axis=1)
-        df["home_wins"] = df["result"]
-        df["away_wins"] = df["result"]
+        # df = df.drop("home_wins", axis=1).drop("away_wins", axis=1)
+        # df["home_wins"] = df["result"]
+        # df["away_wins"] = df["result"]
 
-        for i in range(100):
-            df["away_wins" + str(i)] = df["result"]
+        # for i in range(100):
+        #     df["away_wins" + str(i)] = df["result"]
         
         return df
 
-    def drop_columns(self, data, columns):
+    def _drop_columns(self, data, columns):
         columns = [f"home_{col}" for col in columns] + [f"away_{col}" for col in columns]
 
         return data.drop(columns, axis=1)
+    
+    def dnn_preprocessing(self, records, columns_to_drop=None, include_ties=False):
+        if columns_to_drop:
+            data = self._drop_columns(records, columns_to_drop)
+
+        # (wins, losses, ?ties)
+        classes = records.loc[records['result'] == 1], records.loc[records['result'] == 0], records.loc[records['result'] == 2]
+
+        if not include_ties:
+            w, l, _ = classes
+            classes = (w, l)
+
+        min_length = min([df.shape[0] for df in classes])
+        
+        for class_data in classes:
+            class_data.head(min_length).reset_index()
+        
+        parsed_records = pd.concat(list(classes)).sort_index(kind='merge')
+        # print(parsed_records)
+        # parsed_records = parsed_records.drop("index", axis=1)
+        
+        return parsed_records
 
     def peek(self):
         cursor = self._db.cursor()
