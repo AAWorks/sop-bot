@@ -22,7 +22,7 @@ def preprocessing():
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
-    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["cornerkicks", "offsides", "fouls", "yellowcards", "redcards", "longballs", "interceptions"], include_ties=False)
+    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["cornerkicks", "offsides", "fouls", "yellowcards", "redcards", "longballs", "interceptions", "clearances", "tackles", "dribbles", "goalkeepersaves", "ties", "accuratepasses"], include_ties=True)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
 raw, agg, norm, records = preprocessing()
@@ -55,6 +55,7 @@ with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
     history = tf_model.train_analytics()
     stats = tf_model.evaluate()
+    st.write(tf_model.evaluate_on_confidence())
     st.write("Eval on Test")
     st.write(stats)
     st.write("Training Eval")
