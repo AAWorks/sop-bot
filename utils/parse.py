@@ -1,6 +1,7 @@
 import utils.scrape as scrape
 import sqlite3
 import pandas as pd
+from sklearn.utils import shuffle
 
 class Dataset:
     def __init__(self, league):
@@ -280,8 +281,6 @@ class Dataset:
                 percent_complete = min(percent_complete + inc, 1.0)
                 progress_bar.progress(percent_complete, text=f"Normalizing Data ({int(percent_complete * 100)}% Complete)")
 
-        df = df[::-1]
-
         if progress_bar:
             progress_bar.progress(1.0, text="Normalized Match Data")
 
@@ -297,27 +296,38 @@ class Dataset:
     def _drop_columns(self, data, columns):
         columns = [f"home_{col}" for col in columns] + [f"away_{col}" for col in columns]
 
-        return data.drop(columns, axis=1)
+        data.drop(columns, axis=1, inplace=True)
+
+        return data
     
     def dnn_preprocessing(self, records, columns_to_drop=None, include_ties=False):
         if columns_to_drop:
-            data = self._drop_columns(records, columns_to_drop)
+            records = self._drop_columns(records, columns_to_drop)
 
+        print(records.loc[records['result'] == 1])
         # (wins, losses, ?ties)
-        classes = records.loc[records['result'] == 1], records.loc[records['result'] == 0], records.loc[records['result'] == 2]
+        w, l, t = records.loc[records['result'] == 1], records.loc[records['result'] == 0], records.loc[records['result'] == 2]
 
         if not include_ties:
-            w, l, _ = classes
+            min_length = min([df.shape[0] for df in (w, l)])
+            w = w.head(min_length).reset_index(drop=True)
+            l = l.head(min_length).reset_index(drop=True)
             classes = (w, l)
+        else:
+            min_length = min(w.shape[0], (l.shape[0] + t.shape[0]))
+            w = w.head(min_length).reset_index(drop=True)
+            l_and_t = pd.concat([l, t]).sort_index(kind='merge')
+            l_and_t = l_and_t.head(min_length).reset_index(drop=True)
+            l_and_t.result.replace(2, 0, inplace=True)
+            classes = (w, l_and_t)
 
-        min_length = min([df.shape[0] for df in classes])
-        
-        for class_data in classes:
-            class_data.head(min_length).reset_index()
         
         parsed_records = pd.concat(list(classes)).sort_index(kind='merge')
         # print(parsed_records)
         # parsed_records = parsed_records.drop("index", axis=1)
+
+        parsed_records = shuffle(parsed_records)
+        parsed_records.reset_index(inplace=True, drop=True)
         
         return parsed_records
 
