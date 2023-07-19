@@ -1,5 +1,5 @@
 # sop-bot
-Sports Outcome Prediction bot
+Soccer Outcome Prediction Algo
 
 ### Status: In-Progress
 
