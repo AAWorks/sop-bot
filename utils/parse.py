@@ -304,7 +304,6 @@ class Dataset:
         if columns_to_drop:
             records = self._drop_columns(records, columns_to_drop)
 
-        print(records.loc[records['result'] == 1])
         # (wins, losses, ?ties)
         w, l, t = records.loc[records['result'] == 1], records.loc[records['result'] == 0], records.loc[records['result'] == 2]
 
@@ -328,6 +327,8 @@ class Dataset:
 
         parsed_records = shuffle(parsed_records)
         parsed_records.reset_index(inplace=True, drop=True)
+
+        
         
         return parsed_records
 

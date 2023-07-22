@@ -22,7 +22,7 @@ def preprocessing():
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
-    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=[], include_ties=False)
+    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["yellowcards", "redcards", "goalkeepersaves", "offsides", "fouls", "longballs", "ties"], include_ties=False)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
 raw, agg, norm, records = preprocessing()
