@@ -24,7 +24,7 @@ class DNNModel:
         self._hist_obj = None
     
     def _get_test_data(self, val=None):
-        if val:
+        if val is not None:
             test = self._test.loc[self._test['result'] == val]
         else:
             test = self._test
@@ -34,17 +34,23 @@ class DNNModel:
         }
     
     def build(self):
-        self._model.add(tf.keras.layers.Dropout(0.2, input_shape=[self._init_layer,]))
-        self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
-        self._model.add(tf.keras.layers.Dropout(0.2))
-        self._model.add(tf.keras.layers.Dense(units=22, activation='relu'))
+        # self._model.add(tf.keras.layers.Dropout(0.2, input_shape=[self._init_layer,]))
+        # self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
+        # self._model.add(tf.keras.layers.Dropout(0.2))
+        self._model.add(tf.keras.layers.Dense(units=128, activation='relu'))
+        self._model.add(tf.keras.layers.Dense(units=256, activation='relu'))
+        self._model.add(tf.keras.layers.Dense(units=256, activation='relu'))
         self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))#, activation='relu'))
         opt = tf.keras.optimizers.Adam(learning_rate=0.001) #learning_rate=1e-7
-        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=opt, metrics=['accuracy']) # from_logits?
+        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=opt, metrics=[
+        tf.keras.metrics.BinaryAccuracy(name='accuracy'),
+        tf.keras.metrics.Precision(name='precision'),
+        tf.keras.metrics.Recall(name='recall')
+    ]) # from_logits?
 
     def train(self):
         test = self._get_test_data()
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(test["data"], test["labels"]), verbose=1, epochs=200, batch_size=16, shuffle=True)#, callbacks=[earlystopping])
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(test["data"], test["labels"]), verbose=1, epochs=200, batch_size=32, shuffle=True)#, callbacks=[earlystopping])
         # self._test["data"], self._test['labels']
     
     def train_analytics(self):
@@ -63,11 +69,10 @@ class DNNModel:
         
         return eval
     
-    def evaluate_on_confidence(self):
-        test = self._get_test_data()
-        evals = self.get_test_predictions()
+    def evaluate_train_on_confidence(self):
+        evals = self._model.predict(self._train["data"], verbose=1, batch_size=32)
 
-        eval_map = zip(test['labels'], evals)
+        eval_map = zip(self._train['labels'], evals)
 
         acc_list = []
         for label, eval in eval_map:
@@ -76,5 +81,24 @@ class DNNModel:
             elif eval < 0.4:
                 acc_list.append(1 if label == 0 else 0)
         
+        if not acc_list: return 0
+
         return sum(acc_list)/len(acc_list)
+    
+    def evaluate_on_confidence(self, mode=None):
+        test = self._get_test_data(mode)
+        evals = self.get_test_predictions()
+
+        eval_map = zip(test['labels'], evals)
+
+        acc_list = []
+        for label, eval in eval_map:
+            if eval > 0.55:
+                acc_list.append(1 if label == 1 else 0)
+            elif eval < 0.45:
+                acc_list.append(1 if label == 0 else 0)
+        
+        if not acc_list: return 0
+
+        return sum(acc_list)/len(acc_list), len(acc_list) / len(evals), len(test['labels']) / len(self._get_test_data()['labels'])
             

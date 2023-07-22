@@ -10,7 +10,7 @@ st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)
 
 st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
 
-@st.cache_data
+# @st.cache_data
 def preprocessing():
     data = Dataset("mls")
     vis_raw = data.peek()
@@ -22,7 +22,7 @@ def preprocessing():
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
-    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["cornerkicks", "offsides", "fouls", "yellowcards", "redcards", "longballs", "interceptions", "clearances", "tackles", "dribbles", "goalkeepersaves", "ties", "accuratepasses"], include_ties=True)
+    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=[], include_ties=False)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
 raw, agg, norm, records = preprocessing()
@@ -47,25 +47,28 @@ def get_tf_model():
 
 tf_model = get_tf_model()
 
-pred, tfkeras, xgb, data = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "XGBoost Model :evergreen_tree:", "Datasets :page_facing_up:"])
+pred, tfkeras, data = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
 
 with pred:
     st.info("Select a League and Upcoming Match to Predict")
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
     history = tf_model.train_analytics()
-    stats = tf_model.evaluate()
+    trainstat= tf_model.evaluate_train_on_confidence()
+    st.write("Eval test")
     st.write(tf_model.evaluate_on_confidence())
-    st.write("Eval on Test")
-    st.write(stats)
+    st.write("Eval test on Wins")
+    st.write(tf_model.evaluate_on_confidence(1))
+    st.write("Eval test on Losses")
+    st.write(tf_model.evaluate_on_confidence(0))
+    st.write("Eval on train")
+    st.write(trainstat)
     st.write("Training Eval")
     st.line_chart(history['loss'])
     st.line_chart(history['accuracy'])
     prediction = tf_model.get_test_predictions()
     st.write("Test Preds")
     st.write(prediction)
-with xgb:
-    st.info("XGBoost Gradient Boosted Decision Tree")
 with data:
     st.info("Raw, Aggregated, and Normalized Datasets")
     st.subheader("Preprocessed Data")
