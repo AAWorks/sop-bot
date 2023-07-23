@@ -10,7 +10,7 @@ st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)
 
 st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
 
-# @st.cache_data
+@st.cache_data
 def preprocessing():
     data = Dataset("mls")
     vis_raw = data.peek()
@@ -22,7 +22,7 @@ def preprocessing():
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
-    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["yellowcards", "redcards", "goalkeepersaves", "offsides", "fouls", "longballs", "ties"], include_ties=False)
+    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["cornerkicks", "fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs", "interceptions", "clearances"], include_ties=False)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
 raw, agg, norm, records = preprocessing()
@@ -64,6 +64,8 @@ with tfkeras:
     st.write("Eval on train")
     st.write(trainstat)
     st.write("Training Eval")
+    st.line_chart(history['val_loss'])
+    st.line_chart(history['val_accuracy'])
     st.line_chart(history['loss'])
     st.line_chart(history['accuracy'])
     prediction = tf_model.get_test_predictions()

@@ -300,6 +300,18 @@ class Dataset:
 
         return data
     
+    def _swap_home_away(self, records):
+        new_records = pd.DataFrame()
+        for column in records.columns:
+            if column == "result": new_records[column] = [1 if res == 0 else 0 for res in records[column]]
+            else:
+                mode, column_type = tuple(column.split("_"))
+                new_column = str("home_" if mode == "away" else "away_") + column_type
+
+                new_records[new_column] = records[column]
+
+        return new_records
+    
     def dnn_preprocessing(self, records, columns_to_drop=None, include_ties=False):
         if columns_to_drop:
             records = self._drop_columns(records, columns_to_drop)
@@ -308,10 +320,13 @@ class Dataset:
         w, l, t = records.loc[records['result'] == 1], records.loc[records['result'] == 0], records.loc[records['result'] == 2]
 
         if not include_ties:
-            min_length = min([df.shape[0] for df in (w, l)])
-            w = w.head(min_length).reset_index(drop=True)
-            l = l.head(min_length).reset_index(drop=True)
-            classes = (w, l)
+            # min_length = min([df.shape[0] for df in (w, l)])
+            # w = w.head(min_length).reset_index(drop=True)
+            # l = l.head(min_length).reset_index(drop=True)
+            rev_w = self._swap_home_away(w)
+            rev_l = self._swap_home_away(l)
+
+            classes = (w, l, rev_w, rev_l)
         else:
             min_length = min(w.shape[0], (l.shape[0] + t.shape[0]))
             w = w.head(min_length).reset_index(drop=True)
@@ -327,8 +342,6 @@ class Dataset:
 
         parsed_records = shuffle(parsed_records)
         parsed_records.reset_index(inplace=True, drop=True)
-
-        
         
         return parsed_records
 

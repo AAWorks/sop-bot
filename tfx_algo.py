@@ -34,17 +34,17 @@ class DNNModel:
         }
     
     def build(self):
-        # self._model.add(tf.keras.layers.Dropout(0.2, input_shape=[self._init_layer,]))
         self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
-        self._model.add(tf.keras.layers.Dropout(0.5))
-        # self._model.add(tf.keras.layers.Dropout(0.2, input_shape=[self._init_layer,]))
-        self._model.add(tf.keras.layers.Dense(units=128, activation='relu'))
-        self._model.add(tf.keras.layers.Dropout(0.5))
-        self._model.add(tf.keras.layers.Dense(units=256, activation='relu'))
         self._model.add(tf.keras.layers.Dropout(0.2))
-        self._model.add(tf.keras.layers.Dense(units=256, activation='relu'))
+        # self._model.add(tf.keras.layers.Dropout(0.2, input_shape=[self._init_layer,]))
+        #self._model.add(tf.keras.layers.BatchNormalization())
+        #self._model.add(tf.keras.layers.Dense(units=16, activation='relu'))
+        self._model.add(tf.keras.layers.Dense(units=64, activation='relu'))
+        self._model.add(tf.keras.layers.Dropout(0.2))
+        #self._model.add(tf.keras.layers.LSTM(64))
+
         self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))#, activation='relu'))
-        opt = tf.keras.optimizers.Adam(learning_rate=0.0001) #learning_rate=1e-7
+        opt = tf.keras.optimizers.Adam(learning_rate=0.001) #learning_rate=1e-7
         self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=opt, metrics=[ #EPOCHS AND LEARNING RATE
         tf.keras.metrics.BinaryAccuracy(name='accuracy'),
         tf.keras.metrics.Precision(name='precision'),
@@ -53,7 +53,7 @@ class DNNModel:
 
     def train(self):
         test = self._get_test_data()
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(test["data"], test["labels"]), verbose=1, epochs=500, batch_size=32, shuffle=True)#, callbacks=[earlystopping])
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(test["data"], test["labels"]), verbose=1, epochs=50, batch_size=32, shuffle=True)#, callbacks=[earlystopping])
         # self._test["data"], self._test['labels']
     
     def train_analytics(self):
@@ -79,9 +79,9 @@ class DNNModel:
 
         acc_list = []
         for label, eval in eval_map:
-            if eval > 0.60:
+            if eval > 0.50:
                 acc_list.append(1 if label == 1 else 0)
-            elif eval < 0.4:
+            elif eval < 0.50:
                 acc_list.append(1 if label == 0 else 0)
         
         if not acc_list: return 0
@@ -96,9 +96,9 @@ class DNNModel:
 
         acc_list = []
         for label, eval in eval_map:
-            if eval > 0.60:
+            if eval > 0.50:
                 acc_list.append(1 if label == 1 else 0)
-            elif eval < 0.40:
+            elif eval < 0.50:
                 acc_list.append(1 if label == 0 else 0)
         
         if not acc_list: return 0
