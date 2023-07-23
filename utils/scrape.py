@@ -33,7 +33,7 @@ class Scraper:
             season_id = response[i]["id"]
             self._get_season_match_ids(league_id, season_id)
         
-        with open("data/laliga_match_ids.txt", "w") as f:
+        with open("data/prem_match_ids.txt", "w") as f:
             f.write(",".join(self._ids))
 
     def _clean_data(self, data: str):

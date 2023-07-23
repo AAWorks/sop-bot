@@ -145,7 +145,7 @@ class Dataset:
                 self._add_row(scraper.get_match_data(int(id)))
 
     def pull_league_data(self, chunk_size, curr):
-        self._add_match_data("data/laliga_match_ids.txt", self._scr, chunk_size, curr)
+        self._add_match_data("data/prem_match_ids.txt", self._scr, chunk_size, curr)
     
     def _parse_w_result(self, data):
         def get_result(home, away):
@@ -374,4 +374,4 @@ def run_pull(league_name):
 
     if repeated_errors == 3:
         print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
-run_pull("laliga")
+run_pull("premier_league")
