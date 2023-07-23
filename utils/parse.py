@@ -20,9 +20,10 @@ class Dataset:
             res.append(header[1])
         return res
     
-    def _create_joint_table(self, tables_to_join, tablename):
+    def _create_joint_table(self):
         cursor = self._db.cursor()
-        cursor.execute(f"CREATE TABLE {tablename} AS SELECT * FROM {', '.join(tables_to_join)}")
+        cursor.execute(f"CREATE TABLE IF NOT EXISTS laligapremier AS SELECT * FROM laliga")
+        cursor.execute(f"INSERT INTO laligapremier SELECT * FROM premier_league EXCEPT SELECT * FROM laliga;")
         self._db.commit()
 
     def _create_table(self):
@@ -379,3 +380,6 @@ def run_pull(league_name):
 
     if repeated_errors == 3:
         print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
+
+# data = Dataset("mls")
+# data._create_joint_table()
