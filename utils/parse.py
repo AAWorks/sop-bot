@@ -374,4 +374,5 @@ def run_pull(league_name):
 
     if repeated_errors == 3:
         print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
-run_pull("laliga")
+
+run_pull("premier_league")
