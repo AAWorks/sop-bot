@@ -30,7 +30,7 @@ class Scraper:
         response = requests.get(url, headers=self._footapi._headers).json()["seasons"]
 
         for i in range(num_seasons):
-            season_id = response[i]["id"]
+            season_id = response[i+1]["id"]
             self._get_season_match_ids(league_id, season_id)
         
         with open("data/prem_match_ids.txt", "w") as f:
@@ -146,5 +146,4 @@ class Scraper:
 
         return tuple(match_data)
     
-scr = Scraper()
 
