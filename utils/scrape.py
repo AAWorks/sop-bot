@@ -1,4 +1,4 @@
-from search import FootAPISearch
+from utils.search import FootAPISearch
 import regex as re
 import requests
 

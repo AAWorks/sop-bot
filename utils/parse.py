@@ -1,4 +1,4 @@
-import scrape as scrape
+import utils.scrape as scrape
 import sqlite3
 import pandas as pd
 from sklearn.utils import shuffle
@@ -19,6 +19,11 @@ class Dataset:
         for header in headers:
             res.append(header[1])
         return res
+    
+    def _create_joint_table(self, tables_to_join, tablename):
+        cursor = self._db.cursor()
+        cursor.execute(f"CREATE TABLE {tablename} AS SELECT * FROM {', '.join(tables_to_join)}")
+        self._db.commit()
 
     def _create_table(self):
         cursor = self._db.cursor()
@@ -374,5 +379,3 @@ def run_pull(league_name):
 
     if repeated_errors == 3:
         print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
-
-run_pull("premier_league")

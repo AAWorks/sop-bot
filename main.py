@@ -12,7 +12,7 @@ st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately 
 
 @st.cache_data
 def preprocessing():
-    data = Dataset("mls")
+    data = Dataset("premier_league")
     vis_raw = data.peek()
 
     agg_txt = "Processing Match Data (0% Complete)"
@@ -22,7 +22,7 @@ def preprocessing():
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
-    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["cornerkicks", "fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs", "interceptions", "clearances"], include_ties=False)
+    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs"], include_ties=False)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
 raw, agg, norm, records = preprocessing()

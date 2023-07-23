@@ -12,6 +12,8 @@ class DNNModel:
         train = records.head(train_len)
         self._test = records.tail(records.shape[0] - train_len)
 
+        print(f"***DIAG: {train.loc[train['result'] == 1].shape[0]}, {train.loc[train['result'] == 0].shape[0]}")
+
         self._train = {
             'data': np.array(train[self._features]), 
             'labels': np.array(train["result"])
@@ -41,6 +43,8 @@ class DNNModel:
         #self._model.add(tf.keras.layers.Dense(units=16, activation='relu'))
         self._model.add(tf.keras.layers.Dense(units=64, activation='relu'))
         self._model.add(tf.keras.layers.Dropout(0.2))
+        # self._model.add(tf.keras.layers.Dense(units=256, activation='relu'))
+        # self._model.add(tf.keras.layers.Dropout(0.2))
         #self._model.add(tf.keras.layers.LSTM(64))
 
         self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))#, activation='relu'))
