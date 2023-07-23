@@ -38,22 +38,16 @@ class DNNModel:
     def build(self):
         self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
         self._model.add(tf.keras.layers.Dropout(0.2))
-        # self._model.add(tf.keras.layers.Dropout(0.2, input_shape=[self._init_layer,]))
-        #self._model.add(tf.keras.layers.BatchNormalization())
-        #self._model.add(tf.keras.layers.Dense(units=16, activation='relu'))
         self._model.add(tf.keras.layers.Dense(units=64, activation='relu'))
         self._model.add(tf.keras.layers.Dropout(0.2))
-        # self._model.add(tf.keras.layers.Dense(units=256, activation='relu'))
-        # self._model.add(tf.keras.layers.Dropout(0.2))
-        #self._model.add(tf.keras.layers.LSTM(64))
 
-        self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))#, activation='relu'))
-        opt = tf.keras.optimizers.Adam(learning_rate=0.001) #learning_rate=1e-7
-        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=opt, metrics=[ #EPOCHS AND LEARNING RATE
+        self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
+        opt = tf.keras.optimizers.Adam(learning_rate=0.0001)
+        self._model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=opt, metrics=[
         tf.keras.metrics.BinaryAccuracy(name='accuracy'),
         tf.keras.metrics.Precision(name='precision'),
         tf.keras.metrics.Recall(name='recall')
-    ]) # from_logits?
+    ])
 
     def train(self):
         test = self._get_test_data()

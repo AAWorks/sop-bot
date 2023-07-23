@@ -8,17 +8,17 @@ st.set_page_config(layout="wide", page_title="SOP Bot", page_icon=":gear:")
 st.title('Welcome to SOP Bot :gear:')
 st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)")
 
-st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes two algorithms, a deep neural network and a gradient boosted decision tree.")
+st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes a live soccer API, an extensive amount of data processing, and a Tensorflow-Keras deep neural network.")
 
 @st.cache_data
 def preprocessing():
-    data = Dataset("premier_league")
+    data = Dataset("laligapremier")
     vis_raw = data.peek()
 
     agg_txt = "Processing Match Data (0% Complete)"
-    agg_bar = st.progress(0, text=agg_txt)
-    vis_aggregate = data.aggregate_data(10, agg_bar)
-    agg_bar.progress(1.0, text="Done")
+    #agg_bar = st.progress(0, text=agg_txt)
+    vis_aggregate = data.aggregate_data(10)
+    #agg_bar.progress(1.0, text="Done")
 
     vis_norm = data.normalize_aggregate(vis_aggregate)
 
@@ -27,25 +27,15 @@ def preprocessing():
 
 raw, agg, norm, records = preprocessing()
 
-#@st.cache_resource
-def get_tf_model(): 
-    # a, b, c = records.loc[records['result'] == 0], records.loc[records['result'] == 1], records.loc[records['result'] == 2]
-    # st.write(a.shape[0])
-    # st.write(b.shape[0])
-    # st.write(c.shape[0])
-    # b = b.head(500).reset_index()
-    # a = a.head(500).reset_index()
-    # c = c.head(500).reset_index()
-    # tmp = pd.concat([a, b]).sort_index(kind='merge')
-    # tmp = tmp.drop("index", axis=1).drop("home_score", axis=1).drop("away_score", axis=1).drop("home_ties", axis=1).drop("away_ties", axis=1).drop("home_losses", axis=1).drop("away_losses", axis=1)
-    # st.write(tmp)
+@st.cache_resource
+def train_model(): 
     model = DNNModel(records)
     model.build()
     model.train()
 
     return model
 
-tf_model = get_tf_model()
+tf_model = train_model()
 
 pred, tfkeras, data = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
 
