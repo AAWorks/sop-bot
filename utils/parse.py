@@ -1,4 +1,4 @@
-import utils.scrape as scrape
+import scrape as scrape
 import sqlite3
 import pandas as pd
 from sklearn.utils import shuffle
@@ -145,7 +145,7 @@ class Dataset:
                 self._add_row(scraper.get_match_data(int(id)))
 
     def pull_league_data(self, chunk_size, curr):
-        self._add_match_data("data/mls_match_ids.txt", self._scr, chunk_size, curr)
+        self._add_match_data("data/laliga_match_ids.txt", self._scr, chunk_size, curr)
     
     def _parse_w_result(self, data):
         def get_result(home, away):
@@ -354,8 +354,8 @@ class Dataset:
     def close_db(self):
         self._db.close()
 
-def run_pull():
-    data = Dataset("mls")
+def run_pull(league_name):
+    data = Dataset(league_name)
     i = 0
     repeated_errors = 0
     while i < 11 and repeated_errors < 3:
@@ -374,3 +374,4 @@ def run_pull():
 
     if repeated_errors == 3:
         print(f"***DIAG: Repeated Errors Exceeded Max Threshold***")
+run_pull("laliga")

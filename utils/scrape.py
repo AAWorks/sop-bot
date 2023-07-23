@@ -1,4 +1,4 @@
-from utils.search import FootAPISearch
+from search import FootAPISearch
 import regex as re
 import requests
 
@@ -33,7 +33,7 @@ class Scraper:
             season_id = response[i]["id"]
             self._get_season_match_ids(league_id, season_id)
         
-        with open("data/mls_match_ids.txt", "w") as f:
+        with open("data/laliga_match_ids.txt", "w") as f:
             f.write(",".join(self._ids))
 
     def _clean_data(self, data: str):
@@ -145,4 +145,6 @@ class Scraper:
                 match_data.append(0)
 
         return tuple(match_data)
+    
+scr = Scraper()
 
