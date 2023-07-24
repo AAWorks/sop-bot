@@ -102,4 +102,14 @@ class DNNModel:
         if not acc_list: return 0
 
         return sum(acc_list)/len(acc_list), len(acc_list) / len(evals), len(test['labels']) / len(self._get_test_data()['labels'])
+    
+    def raw_prediction(self, aggregate_stats):
+        return self._model.predict([aggregate_stats], verbose=1, batch_size=32)[0]
+    
+    def pretty_prediction(self, aggregate_stats, home_team, away_team):
+        probability = self._model.predict([aggregate_stats], verbose=1, batch_size=32)[0]
+        probability *= 100
+        winning_team, losing_team = home_team, away_team if probability >= 50 else away_team, home_team
+        
+        return f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}"
             
