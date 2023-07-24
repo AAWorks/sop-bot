@@ -11,6 +11,9 @@ class Dataset:
         self._scr = scrape.Scraper()
     
     @property
+    def league_name(self): return self._league_name
+    
+    @property
     def table_headers(self):
         cursor = self._db.cursor()
         cursor.execute(f"PRAGMA table_info({self._league_name});")
@@ -19,6 +22,13 @@ class Dataset:
         for header in headers:
             res.append(header[1])
         return res
+    
+    @property
+    def team_names(self) -> tuple:
+        cursor = self._db.cursor()
+        cursor.execute("SELECT DISTINCT home_team FROM laligapremier ORDER BY home_team ASC;")
+        names = cursor.fetchall()
+        return tuple([name[0] for name in names])
     
     def _create_joint_table(self):
         cursor = self._db.cursor()

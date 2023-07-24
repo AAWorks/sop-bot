@@ -10,22 +10,23 @@ st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)
 
 st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes a live soccer API, an extensive amount of data processing, and a Tensorflow-Keras deep neural network.")
 
-@st.cache_data
-def preprocessing():
-    data = Dataset("laligapremier")
-    vis_raw = data.peek()
+dataset = Dataset("laligapremier")
 
-    agg_txt = "Processing Match Data (0% Complete)"
+@st.cache_data
+def preprocessing(_dataset):
+    vis_raw = _dataset.peek()
+
+    #agg_txt = "Processing Match Data (0% Complete)"
     #agg_bar = st.progress(0, text=agg_txt)
-    vis_aggregate = data.aggregate_data(10)
+    vis_aggregate = _dataset.aggregate_data(10)
     #agg_bar.progress(1.0, text="Done")
 
-    vis_norm = data.normalize_aggregate(vis_aggregate)
+    vis_norm = _dataset.normalize_aggregate(vis_aggregate)
 
-    dnn_train = data.dnn_preprocessing(vis_norm, columns_to_drop=["fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs"], include_ties=False)
+    dnn_train = _dataset.dnn_preprocessing(vis_norm, columns_to_drop=["fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs"], include_ties=False)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
-raw, agg, norm, records = preprocessing()
+raw, agg, norm, records = preprocessing(dataset)
 
 @st.cache_resource
 def train_model(): 
@@ -37,10 +38,30 @@ def train_model():
 
 tf_model = train_model()
 
-pred, tfkeras, data = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
+pred, tfkeras, datasets = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
 
 with pred:
+    teamnames = dataset.team_names
     st.info("Select a League and Upcoming Match to Predict")
+
+    #form start
+    # select team 1
+    home_team = st.selectbox(
+    'Home Team',
+    teamnames) 
+
+    # select team 2
+    away_team = st.selectbox(
+    'Away Team',
+    teamnames)
+
+    # # uh oh home = away
+    # if True: # home = away
+    #     pass # grey out submit button (disable)
+    # else:
+    #     pass #submit button
+    # #form_end
+
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
     history = tf_model.train_analytics()
@@ -61,7 +82,7 @@ with tfkeras:
     prediction = tf_model.get_test_predictions()
     st.write("Test Preds")
     st.write(prediction)
-with data:
+with datasets:
     st.info("Raw, Aggregated, and Normalized Datasets")
     st.subheader("Preprocessed Data")
     st.dataframe(records)
