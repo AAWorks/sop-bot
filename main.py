@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import time
+import random
 
 from utils.parse import Dataset
 from tfx_algo import DNNModel
@@ -40,28 +42,35 @@ tf_model = train_model()
 
 pred, tfkeras, datasets = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
 
+def ask_ai(home_team, away_team):
+    pass
+
+
 with pred:
     teamnames = dataset.team_names
     st.info("Select a League and Upcoming Match to Predict")
 
-    #form start
-    # select team 1
-    home_team = st.selectbox(
-    'Home Team',
-    teamnames) 
+    with st.form("team_select"):
+        done = False
+        # select team 1
+        home_team = st.selectbox(
+        'Home Team',
+        teamnames) 
 
-    # select team 2
-    away_team = st.selectbox(
-    'Away Team',
-    teamnames)
-
-    # # uh oh home = away
-    # if True: # home = away
-    #     pass # grey out submit button (disable)
-    # else:
-    #     pass #submit button
-    # #form_end
-
+        # select team 2
+        away_team = st.selectbox(
+        'Away Team',
+        teamnames)
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            if home_team == away_team:
+                st.warning("Please select 2 different teams")
+            else:
+                st.success("Submitted to the AI :brain:")
+                done = True
+    if done:
+        with st.spinner('Asking the AI'):
+            ask_ai(home_team,away_team)
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
     history = tf_model.train_analytics()
