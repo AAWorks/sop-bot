@@ -189,7 +189,7 @@ class Dataset:
         cursor = self._db.cursor()
         epoch_date = int(epoch_date)
 
-        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND rowid > {epoch_date} ORDER BY epoch_date")
+        cursor.execute(f"SELECT rowid, * from {self._league_name} WHERE home_team = '{team_name}' OR away_team = '{team_name}' AND epoch_date < {epoch_date} ORDER BY epoch_date")
         team_matches = cursor.fetchall()
 
         if len(team_matches) >= agg_depth:

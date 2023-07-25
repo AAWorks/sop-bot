@@ -38,49 +38,56 @@ def train_model():
 
     return model
 
-tf_model = train_model()
+model = train_model()
 
 pred, tfkeras, datasets = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
-
-def ask_ai(home_team, away_team):
-    pass
 
 
 with pred:
     teamnames = dataset.team_names
-    st.info("Select a League and Upcoming Match to Predict")
+    st.info("Predict a Match Outcome")
 
-    with st.form("team_select"):
-        done = False
-        # select team 1
-        home_team = st.selectbox(
-        'Home Team',
-        teamnames) 
+    col1, col2 = st.columns(2)
+    # select team 1
+    home_team = col1.selectbox(
+    'Home Team',
+    teamnames) 
 
-        # select team 2
-        away_team = st.selectbox(
-        'Away Team',
-        teamnames)
-        submitted = st.form_submit_button("Submit")
-        if submitted:
-            if home_team == away_team:
-                st.warning("Please select 2 different teams")
-            else:
-                st.success("Submitted to the AI :brain:")
-                done = True
-    if done:
-        with st.spinner('Asking the AI'):
-            ask_ai(home_team,away_team)
+    # select team 2
+    away_team = col2.selectbox(
+    'Away Team',
+    teamnames)
+
+    if home_team == away_team:
+        submitted = st.button("Generate Prediction", disabled=True, use_container_width=True)
+    else:
+        submitted = st.button("Generate Prediction", disabled=False, use_container_width=True)
+    
+    if submitted:
+        match_aggregate = []
+        probability, prediction = model.pretty_prediction(match_aggregate, home_team, away_team)
+        if 0.40 < probability < 0.60 : st.warning(prediction)
+        else: st.success(prediction)
+        # if submitted:
+        #     if home_team == away_team:
+        #         st.warning("Please select 2 different teams")
+        #     else:
+        #         st.success("Submitted to the AI :brain:")
+        #         done = True
+    # if done:
+    #     with st.spinner('Asking the AI'):
+    #         ask_ai(home_team,away_team)
+
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
-    history = tf_model.train_analytics()
-    trainstat= tf_model.evaluate_train_on_confidence()
+    history = model.train_analytics()
+    trainstat= model.evaluate_train_on_confidence()
     st.write("Eval test")
-    st.write(tf_model.evaluate_on_confidence())
+    st.write(model.evaluate_on_confidence())
     st.write("Eval test on Wins")
-    st.write(tf_model.evaluate_on_confidence(1))
+    st.write(model.evaluate_on_confidence(1))
     st.write("Eval test on Losses")
-    st.write(tf_model.evaluate_on_confidence(0))
+    st.write(model.evaluate_on_confidence(0))
     st.write("Eval on train")
     st.write(trainstat)
     st.write("Training Eval")
@@ -88,7 +95,7 @@ with tfkeras:
     st.line_chart(history['val_accuracy'])
     st.line_chart(history['loss'])
     st.line_chart(history['accuracy'])
-    prediction = tf_model.get_test_predictions()
+    prediction = model.get_test_predictions()
     st.write("Test Preds")
     st.write(prediction)
 with datasets:
