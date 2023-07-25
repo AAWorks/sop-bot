@@ -38,7 +38,7 @@ class DNNModel:
     def build(self):
         self._model.add(tf.keras.layers.Dense(units=self._init_layer, activation='relu', input_shape=[self._init_layer,]))
         self._model.add(tf.keras.layers.Dropout(0.2))
-        self._model.add(tf.keras.layers.Dense(units=64, activation='relu'))
+        self._model.add(tf.keras.layers.Dense(units=self._init_layer * 2 // 3, activation='relu'))
         self._model.add(tf.keras.layers.Dropout(0.2))
 
         self._model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
@@ -61,17 +61,17 @@ class DNNModel:
     
     def evaluate(self):
         test = self._get_test_data(0)
-        eval = self._model.evaluate(test["data"], test['labels'], verbose=1, return_dict=True, batch_size=32)     
+        eval = self._model.evaluate(test["data"], test['labels'], return_dict=True, batch_size=32)     
         return eval
     
     def get_test_predictions(self, mode=None):
         test = self._get_test_data(mode)
-        eval = self._model.predict(test["data"], verbose=1, batch_size=32)
+        eval = self._model.predict(test["data"], batch_size=32)
         
         return eval
     
     def evaluate_train_on_confidence(self):
-        evals = self._model.predict(self._train["data"], verbose=1, batch_size=32)
+        evals = self._model.predict(self._train["data"], batch_size=32)
 
         eval_map = zip(self._train['labels'], evals)
 
@@ -104,12 +104,12 @@ class DNNModel:
         return sum(acc_list)/len(acc_list), len(acc_list) / len(evals), len(test['labels']) / len(self._get_test_data()['labels'])
     
     def raw_prediction(self, aggregate_stats):
-        return self._model.predict([aggregate_stats], verbose=1, batch_size=32)[0]
+        return self._model.predict([aggregate_stats], batch_size=32)[0]
     
     def pretty_prediction(self, aggregate_stats, home_team, away_team):
-        probability = self._model.predict([aggregate_stats], verbose=1, batch_size=32)[0]
+        probability = self.raw_prediction(aggregate_stats)
         probability *= 100
         winning_team, losing_team = home_team, away_team if probability >= 50 else away_team, home_team
         
-        return f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}"
+        return probability, f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}"
             
