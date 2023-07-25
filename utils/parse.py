@@ -2,6 +2,7 @@ import utils.scrape as scrape
 import sqlite3
 import pandas as pd
 from sklearn.utils import shuffle
+import time
 
 class Dataset:
     def __init__(self, league):
@@ -248,12 +249,21 @@ class Dataset:
                 elif "away" in col:
                     new_match[col] = self._sum_column(away_matches, away, col)
             if col == "result":
-                new_match[col] = {"W": 1, "L": 0, "T": 2}.get(match[col])
+                if match[col] != -1:
+                    new_match[col] = {"W": 1, "L": 0, "T": 2}.get(match[col])
                 for mode in ("wins", "ties","losses"):
                     new_match[f"home_{mode}"] = self._sum_column(home_matches, home, col, mode)
                     new_match[f"away_{mode}"] = self._sum_column(away_matches, away, col, mode)
         
         return new_match
+
+    def _aggregate_potential_match_stats(self, home_team, away_team, agg_depth):
+        match = dict(zip(self.table_headers, [0] * len(self.table_headers)))
+        match["result"] = -1
+        match["home_team"] = home_team
+        match["away_team"] = away_team
+        match["epoch_date"] = int(time.time())
+        return self._aggregate_match_data(match, agg_depth)
 
     def aggregate_data(self, aggregate_depth, progress_bar=None):
         aggregated_data = []
@@ -315,6 +325,12 @@ class Dataset:
         data.drop(columns, axis=1, inplace=True)
 
         return data
+
+    def potential_match_preprocessing(self, aggregated_data, home_team, away_team, agg_depth, columns_to_drop):
+        agg_match = self._aggregate_potential_match_stats(home_team, away_team, agg_depth)
+        to_norm = [agg_match] + aggregated_data
+        normalized = self.normalize_aggregate(to_norm).head(1)
+        return self._drop_columns(normalized, columns_to_drop)
     
     def _swap_home_away(self, records):
         new_records = pd.DataFrame()

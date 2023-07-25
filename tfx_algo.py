@@ -51,7 +51,7 @@ class DNNModel:
 
     def train(self):
         test = self._get_test_data()
-        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(test["data"], test["labels"]), verbose=1, epochs=50, batch_size=32, shuffle=True)#, callbacks=[earlystopping])
+        self._hist_obj = self._model.fit(self._train["data"], self._train['labels'], validation_data=(test["data"], test["labels"]), epochs=50, batch_size=32, verbose=1, shuffle=True)#, callbacks=[earlystopping])
         # self._test["data"], self._test['labels']
     
     def train_analytics(self):
@@ -61,17 +61,17 @@ class DNNModel:
     
     def evaluate(self):
         test = self._get_test_data(0)
-        eval = self._model.evaluate(test["data"], test['labels'], return_dict=True, batch_size=32)     
+        eval = self._model.evaluate(test["data"], test['labels'], return_dict=True, batch_size=32, verbose=0)     
         return eval
     
     def get_test_predictions(self, mode=None):
         test = self._get_test_data(mode)
-        eval = self._model.predict(test["data"], batch_size=32)
+        eval = self._model.predict(test["data"], batch_size=32, verbose=0)
         
         return eval
     
     def evaluate_train_on_confidence(self):
-        evals = self._model.predict(self._train["data"], batch_size=32)
+        evals = self._model.predict(self._train["data"], batch_size=32, verbose=0)
 
         eval_map = zip(self._train['labels'], evals)
 
@@ -104,12 +104,12 @@ class DNNModel:
         return sum(acc_list)/len(acc_list), len(acc_list) / len(evals), len(test['labels']) / len(self._get_test_data()['labels'])
     
     def raw_prediction(self, aggregate_stats):
-        return self._model.predict([aggregate_stats], batch_size=32)[0]
+        return self._model.predict(aggregate_stats, batch_size=32, verbose=0)[0][0]
     
     def pretty_prediction(self, aggregate_stats, home_team, away_team):
-        probability = self.raw_prediction(aggregate_stats)
+        probability = float(str(self.raw_prediction(aggregate_stats)))
         probability *= 100
-        winning_team, losing_team = home_team, away_team if probability >= 50 else away_team, home_team
+        winning_team, losing_team = (home_team, away_team) if probability >= 50 else (away_team, home_team)
         
-        return probability, f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}"
+        return probability, str(f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}")
             

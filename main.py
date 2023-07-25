@@ -6,6 +6,9 @@ import random
 from utils.parse import Dataset
 from tfx_algo import DNNModel
 
+AGGREGATION_DEPTH = 10
+COLUMNS_TO_DROP = ["fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs"]
+
 st.set_page_config(layout="wide", page_title="SOP Bot", page_icon=":gear:")
 st.title('Welcome to SOP Bot :gear:')
 st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)")
@@ -20,12 +23,12 @@ def preprocessing(_dataset):
 
     #agg_txt = "Processing Match Data (0% Complete)"
     #agg_bar = st.progress(0, text=agg_txt)
-    vis_aggregate = _dataset.aggregate_data(10)
+    vis_aggregate = _dataset.aggregate_data(AGGREGATION_DEPTH)
     #agg_bar.progress(1.0, text="Done")
 
     vis_norm = _dataset.normalize_aggregate(vis_aggregate)
 
-    dnn_train = _dataset.dnn_preprocessing(vis_norm, columns_to_drop=["fouls", "yellowcards", "redcards", "goalkeepersaves", "offsides", "longballs"], include_ties=False)
+    dnn_train = _dataset.dnn_preprocessing(vis_norm, columns_to_drop=COLUMNS_TO_DROP, include_ties=False)
     return vis_raw, vis_aggregate, vis_norm, dnn_train
 
 raw, agg, norm, records = preprocessing(dataset)
@@ -64,9 +67,10 @@ with pred:
         submitted = st.button("Generate Prediction", disabled=False, use_container_width=True)
     
     if submitted:
-        match_aggregate = []
-        probability, prediction = model.pretty_prediction(match_aggregate, home_team, away_team)
-        if 0.40 < probability < 0.60 : st.warning(prediction)
+        historical_statistics = dataset.potential_match_preprocessing(agg, home_team, away_team, AGGREGATION_DEPTH, COLUMNS_TO_DROP)
+        historical_statistics.drop("result", axis=1, inplace=True)
+        probability, prediction = model.pretty_prediction(historical_statistics, home_team, away_team)
+        if 0.45 < probability < 0.55 : st.warning(prediction)
         else: st.success(prediction)
         # if submitted:
         #     if home_team == away_team:
