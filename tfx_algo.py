@@ -108,8 +108,9 @@ class DNNModel:
     
     def pretty_prediction(self, aggregate_stats, home_team, away_team):
         probability = float(str(self.raw_prediction(aggregate_stats)))
-        probability *= 100
+        probability = int(probability * 10000) / 100
         winning_team, losing_team = (home_team, away_team) if probability >= 50 else (away_team, home_team)
+        probability = probability if probability >= 50 else 100 - probability
         
         return probability, str(f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}")
             
