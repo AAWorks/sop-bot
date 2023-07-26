@@ -106,7 +106,8 @@ with tfkeras:
     col4.metric(label="Train Accuracy", value=train_acc, delta=round(train_acc - 50, 2))
     style_metric_cards()
 
-    st.line_chart(history['val_loss'])
+    add_vertical_space(1)
+    st.line_chart(history['val_loss']) #NEEDS BETTER IMPLEMENTATION
     st.line_chart(history['val_accuracy'])
     st.line_chart(history['loss'])
     st.line_chart(history['accuracy'])
