@@ -1,7 +1,10 @@
 import streamlit as st
-import pandas as pd
-import time
-import random
+from streamlit_extras.metric_cards import style_metric_cards
+from streamlit_extras.add_vertical_space import add_vertical_space
+from streamlit_extras.dataframe_explorer import dataframe_explorer
+
+from ydata_profiling import ProfileReport
+from streamlit_pandas_profiling import st_profile_report
 
 from utils.parse import Dataset
 from tfx_algo import DNNModel
@@ -43,8 +46,13 @@ def train_model():
 
 model = train_model()
 
-pred, tfkeras, datasets = st.tabs(["Get Prediction :brain:", "Tensorflow/Keras Model :spider_web:", "Datasets :page_facing_up:"])
+@st.cache_resource
+def generate_profile_report():
+    return ProfileReport(records, minimal=True)
 
+pr = generate_profile_report()
+
+pred, tfkeras, preprocessed_dataset_profile, view_datasets = st.tabs(["Get Prediction :brain:", "Model Analytics :spider_web:", "Processed Dataset Profile Report :mag:", "View Base Dataset :page_facing_up:"])
 
 with pred:
     teamnames = dataset.team_names
@@ -84,17 +92,20 @@ with pred:
 
 with tfkeras:
     st.info("Tensorflow-keras Deep Neural Network Model")
+    add_vertical_space(1)
     history = model.train_analytics()
-    trainstat= model.evaluate_train_on_confidence()
-    st.write("Eval test")
-    st.write(model.evaluate_on_confidence())
-    st.write("Eval test on Wins")
-    st.write(model.evaluate_on_confidence(1))
-    st.write("Eval test on Losses")
-    st.write(model.evaluate_on_confidence(0))
-    st.write("Eval on train")
-    st.write(trainstat)
-    st.write("Training Eval")
+    trainstat = model.evaluate_train_on_confidence()
+    col1, col2, col3, col4 = st.columns(4)
+    val_acc = round(model.evaluate_on_confidence() * 100, 2)
+    loss_acc = round(model.evaluate_on_confidence(0) * 100, 2)
+    win_acc = round(model.evaluate_on_confidence(1) * 100, 2)
+    train_acc = round(model.evaluate_train_on_confidence() * 100, 2)
+    col1.metric(label="Testing Accuracy", value=val_acc, delta=round(val_acc - 50, 2))
+    col2.metric(label="Testing Accuracy (Wins)", value=win_acc, delta=round(win_acc - 50, 2))
+    col3.metric(label="Testing Accuracy (Losses)", value=loss_acc, delta=round(loss_acc - 50, 2))
+    col4.metric(label="Train Accuracy", value=train_acc, delta=round(train_acc - 50, 2))
+    style_metric_cards()
+
     st.line_chart(history['val_loss'])
     st.line_chart(history['val_accuracy'])
     st.line_chart(history['loss'])
@@ -102,15 +113,12 @@ with tfkeras:
     prediction = model.get_test_predictions()
     st.write("Test Preds")
     st.write(prediction)
-with datasets:
-    st.info("Raw, Aggregated, and Normalized Datasets")
-    st.subheader("Preprocessed Data")
-    st.dataframe(records)
-    st.subheader("Normalized Aggregated Data")
-    st.dataframe(norm)
-    st.subheader("Aggregated Data")
-    st.dataframe(agg)
-    st.subheader("Raw Data")
-    st.dataframe(raw)
-    
-    
+
+with preprocessed_dataset_profile:
+    if pr:
+        st_profile_report(pr)
+
+with view_datasets:
+    st.info("Base Dataset - Pulled directly from FootAPI")
+    filtered_df = dataframe_explorer(raw, case=False)
+    st.dataframe(filtered_df, use_container_width=True) 
