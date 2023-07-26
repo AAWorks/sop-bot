@@ -12,8 +12,6 @@ class DNNModel:
         train = records.head(train_len)
         self._test = records.tail(records.shape[0] - train_len)
 
-        print(f"***DIAG: {train.loc[train['result'] == 1].shape[0]}, {train.loc[train['result'] == 0].shape[0]}")
-
         self._train = {
             'data': np.array(train[self._features]), 
             'labels': np.array(train["result"])
@@ -101,7 +99,7 @@ class DNNModel:
         
         if not acc_list: return 0
 
-        return sum(acc_list)/len(acc_list), len(acc_list) / len(evals), len(test['labels']) / len(self._get_test_data()['labels'])
+        return sum(acc_list)/len(acc_list) #, len(acc_list) / len(evals), len(test['labels']) / len(self._get_test_data()['labels'])
     
     def raw_prediction(self, aggregate_stats):
         return self._model.predict(aggregate_stats, batch_size=32, verbose=0)[0][0]
