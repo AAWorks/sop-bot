@@ -13,3 +13,15 @@ Soccer Outcome Prediction Algo
 ### Next Steps
 * Add a parser / tfxalgo method for easier feature selection
 * try guessing win/tie/loss via sparsecc and softmax
+
+#Streamlit extras to implement
+sop-bot:
+extras - metric-cards
+extras - altex
+extras - dataframe-explorer
+
+options-pricer:
+extras - mandatory date range picker
+extras - altex
+extras - colored_headers
+extras - dataframe-explorer
