@@ -9,3 +9,4 @@ pandas-profiling==3.6.6
 streamlit-pandas-profiling==0.1.3
 streamlit-extras==0.2.7
 altair==5.0.1
+entrypoints==0.4
