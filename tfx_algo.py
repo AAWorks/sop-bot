@@ -111,4 +111,9 @@ class DNNModel:
         probability = probability if probability >= 50 else 100 - probability
         
         return probability, str(f":gear: SOP Bot is predicting a {probability}% chance that {winning_team} will beat {losing_team}")
-            
+
+    def summary(self):
+        strlist = []
+        self._model.summary(print_fn=lambda x: strlist.append(x))
+        print(strlist)
+        return "\n".join(strlist)
