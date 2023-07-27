@@ -7,7 +7,6 @@ from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_extras.altex import sparkline_chart
 from streamlit_extras.altex import hist_chart
 
-import altair as alt
 import pandas as pd
 from ydata_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
@@ -172,7 +171,7 @@ with tfkeras:
     prediction_df["probability"] = predictions.astype(int).tolist()
     hist_chart(
         data=prediction_df,
-        x=alt.X("probability", title="Probability (%)"),
+        x="probability",
         title="Distribution of Outputted Test Set Probabilities"
     )
 
