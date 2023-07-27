@@ -152,7 +152,7 @@ with tfkeras:
             autoscale_y=True,
         )
     st.divider()
-    other_metrics = [(max(history[metric]) * 100) for metric in ("val_precision", "val_recall", "precision", "recall")]
+    other_metrics = [round(max(history[metric]) * 100, 2) for metric in ("val_precision", "val_recall", "precision", "recall")]
     test_p, test_r, train_p, train_r = other_metrics
     col1, col2, col3, col4 = st.columns(4)
     col1.metric(label="Test Precision", value=f"{test_p}%", delta=f"{round(test_p - 50, 2)}%")
