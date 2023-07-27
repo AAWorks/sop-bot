@@ -97,18 +97,18 @@ with pred:
 with tfkeras:
     st.info("Tensorflow/Keras Deep Neural Network Model Summary & Evaluation Metrics")
     st.code(model.summary(), language='python')
-    st.divider()
+    # st.divider()
     history = model.train_analytics()
     trainstat = model.evaluate_train_on_confidence()
-    col1, col2, col3, col4 = st.columns(4)
-    val_acc = round(model.evaluate_on_confidence() * 100, 2)
-    loss_acc = round(model.evaluate_on_confidence(0) * 100, 2)
-    win_acc = round(model.evaluate_on_confidence(1) * 100, 2)
+    # col1, col2, col3, col4 = st.columns(4)
+    # val_acc = round(model.evaluate_on_confidence() * 100, 2)
+    # loss_acc = round(model.evaluate_on_confidence(0) * 100, 2)
+    # win_acc = round(model.evaluate_on_confidence(1) * 100, 2)
     train_acc = round(model.evaluate_train_on_confidence() * 100, 2)
-    col1.metric(label="Testing Accuracy", value=f"{val_acc}%", delta=f"{round(val_acc - 50, 2)}%")
-    col2.metric(label="Testing Accuracy (Wins)", value=f"{win_acc}%", delta=f"{round(win_acc - 50, 2)}%")
-    col3.metric(label="Testing Accuracy (Losses)", value=f"{loss_acc}%", delta=f"{round(loss_acc - 50, 2)}%")
-    col4.metric(label="Training Accuracy", value=f"{train_acc}%", delta=f"{round(train_acc - 50, 2)}%")
+    # col1.metric(label="Testing Accuracy", value=f"{val_acc}%", delta=f"{round(val_acc - 50, 2)}%")
+    # col2.metric(label="Testing Accuracy (Wins)", value=f"{win_acc}%", delta=f"{round(win_acc - 50, 2)}%")
+    # col3.metric(label="Testing Accuracy (Losses)", value=f"{loss_acc}%", delta=f"{round(loss_acc - 50, 2)}%")
+    # col4.metric(label="Training Accuracy", value=f"{train_acc}%", delta=f"{round(train_acc - 50, 2)}%")
     style_metric_cards()
 
     st.divider()
@@ -129,7 +129,7 @@ with tfkeras:
         data = pd.DataFrame()
         data['val_accuracy'] = history['val_accuracy']
         data['epoch'] = list(range(data.shape[0]))
-        st.metric("Validation Accuracy", str(data["val_accuracy"].max() * 100)[:5] + "%")
+        st.metric("Validation Accuracy", str(data["val_accuracy"].max() * 100)[:5] + "%", delta=f"{round(data['val_accuracy'].max() * 100 - 50, 2)}%")
         sparkline_chart(
             data=data,
             x="epoch",
@@ -153,7 +153,7 @@ with tfkeras:
         data = pd.DataFrame()
         data['accuracy'] = history['accuracy']
         data['epoch'] = list(range(data.shape[0]))
-        st.metric("Training Accuracy", str(train_acc) + "%")
+        st.metric("Training Accuracy", str(train_acc) + "%", delta=f"{round(data['accuracy'].max() * 100 - 50, 2)}%")
         sparkline_chart(
             data=data,
             x="epoch",
