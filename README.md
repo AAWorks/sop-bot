@@ -15,11 +15,6 @@ Soccer Outcome Prediction Algo
 * try guessing win/tie/loss via sparsecc and softmax
 
 #Streamlit extras to implement
-sop-bot:
-extras - metric-cards
-extras - altex
-extras - dataframe-explorer
-
 options-pricer:
 extras - mandatory date range picker
 extras - altex
