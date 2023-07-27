@@ -20,7 +20,7 @@ COLUMNS_TO_DROP = ["fouls", "yellowcards", "redcards", "goalkeepersaves", "offsi
 st.title('Welcome to SOP Bot :gear:')
 st.caption("By Brothers Alejandro Alonso (AAWorks) and Andres Alonso (AXAStudio)")
 
-st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes a live soccer API, an extensive amount of data processing, and a Tensorflow-Keras deep neural network.")
+st.info("SOP Bot is a sports outcome prediction bot with the goal of accurately predicting the outcome of upcoming soccer matches. SOP Bot utilizes a live soccer API, an extensive amount of data processing, and a Tensorflow-Keras deep neural network. Currently supports teams from the English Premier League and the Spanish La Liga. Cross-matchups are supported, although precision sees a ~7% increase in error.")
 
 dataset = Dataset("laligapremier")
 
