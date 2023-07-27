@@ -143,7 +143,7 @@ with tfkeras:
         data = pd.DataFrame()
         data['accuracy'] = history['accuracy']
         data['epoch'] = list(range(data.shape[0]))
-        st.metric("Training Accuracy", str(train_acc) + "%", delta=f"{round(data['accuracy'].max() * 100 - 50, 2)}%")
+        st.metric("Training Accuracy", f"{round(data['accuracy'].max() * 100, 2)}%" + "%", delta=f"{round(data['accuracy'].max() * 100 - 50, 2)}%")
         sparkline_chart(
             data=data,
             x="epoch",
