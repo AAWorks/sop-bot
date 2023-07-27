@@ -127,7 +127,7 @@ with tfkeras:
         )
     with testacc:
         data = pd.DataFrame()
-        data['val_accuracy'] = history['val_accuracy']
+        data['val_accuracy'] = history['val_precision']
         data['epoch'] = list(range(data.shape[0]))
         st.metric("Validation Accuracy", str(data["val_accuracy"].max() * 100)[:5] + "%", delta=f"{round(data['val_accuracy'].max() * 100 - 50, 2)}%")
         sparkline_chart(
