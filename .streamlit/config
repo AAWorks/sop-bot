@@ -1,3 +1,6 @@
 #.streamlit/config.toml
 [client]
 showErrorDetails = false
+
+[theme]
+base="light"
