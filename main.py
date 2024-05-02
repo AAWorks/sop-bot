@@ -8,8 +8,8 @@ from streamlit_extras.altex import sparkline_chart
 from streamlit_extras.altex import hist_chart
 
 import pandas as pd
-from ydata_profiling import ProfileReport
-from streamlit_pandas_profiling import st_profile_report
+#from ydata_profiling import ProfileReport
+#from streamlit_pandas_profiling import st_profile_report
 
 from utils.parse import Dataset
 from tfx_algo import DNNModel
