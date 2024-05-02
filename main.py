@@ -171,8 +171,9 @@ with tfkeras:
 
 with preprocessed_dataset_profile:
     st.info("Profile Report on the Utilized Dataset (Post Processing)")
-    if pr:
-        st_profile_report(pr)
+    st.info("Currently unable to display due to recent updates to Streamlit's package handling. Waiting on fix from devs.")
+    #if pr:
+    #    st_profile_report(pr)
 
 with view_datasets:
     st.info("Base Dataset - Pulled Directly from FootAPI")
