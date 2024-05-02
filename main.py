@@ -50,11 +50,11 @@ def train_model():
 
 model = train_model()
 
-@st.cache_resource
-def generate_profile_report():
-    return ProfileReport(records, minimal=True)
+#@st.cache_resource
+#def generate_profile_report():
+#    return ProfileReport(records, minimal=True)
 
-pr = generate_profile_report()
+#pr = generate_profile_report()
 
 pred, tfkeras, preprocessed_dataset_profile, view_datasets = st.tabs(["Get Prediction :brain:", "Model Analytics :spider_web:", "Processed Dataset Profile Report :mag:", "View Base Dataset :page_facing_up:"])
 
